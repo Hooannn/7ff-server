@@ -41,7 +41,8 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
-
+./src/db/migrations
+./src/db/seeds
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
