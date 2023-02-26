@@ -9,9 +9,9 @@
     "migrate:reset": "npm run migrate:rollback && npm run migrate:latest",
     "migrate": "npm run migrate:reset && npm run seed",
     "seed": "knex seed:run --knexfile src/db/index.ts",
-    "build": "yarn && npx tsc && cross-env NODE_ENV=production",
+    "build": "yarn && npx tsc",
     "test": "jest --forceExit --detectOpenHandles",
-    "start": "nodemon dist/server.js",
+    "start": "cross-env NODE_ENV=production nodemon dist/server.js",
     "dev": "cross-env NODE_ENV=development nodemon"
   },
   "author": "hoanthui",
