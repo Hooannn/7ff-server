@@ -1,6 +1,6 @@
 import { NextFunction, Response } from 'express';
-import { HttpException } from '@exceptions/HttpException';
-import { RequestWithUser } from '@interfaces/auth.interface';
+import { HttpException } from '../exceptions/HttpException';
+import { RequestWithUser } from '../interfaces/auth.interface';
 
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
