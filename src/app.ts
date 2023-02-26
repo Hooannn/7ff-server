@@ -4,11 +4,13 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import morgan from 'morgan';
 // import { connect, set } from 'mongoose';
-import { NODE_ENV, ORIGIN, CREDENTIALS, PORT } from '@config';
+import { NODE_ENV, ORIGIN, CREDENTIALS, PORT, LOG_FORMAT } from '@config';
 // import { dbConnection } from './databases/index';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
+import { logger, stream } from '@utils/logger';
 
 class App {
   public app: express.Application;
@@ -28,10 +30,10 @@ class App {
 
   public listen() {
     this.app.listen(this.port, () => {
-      console.log(`=================================`);
-      console.log(`======= ENV: ${this.env} =======`);
-      console.log(`🚀 App listening on the port ${this.port}`);
-      console.log(`=================================`);
+      logger.info(`=================================`);
+      logger.info(`======= ENV: ${this.env} =======`);
+      logger.info(`🚀 App listening on the port ${this.port}`);
+      logger.info(`=================================`);
     });
   }
 
@@ -44,6 +46,7 @@ class App {
   }
 
   private initializeMiddlewares() {
+    this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());
     this.app.use(helmet());
