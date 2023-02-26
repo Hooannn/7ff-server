@@ -11,7 +11,7 @@
     "seed": "knex seed:run --knexfile src/db/index.ts",
     "build": "yarn && npx tsc",
     "test": "jest --forceExit --detectOpenHandles",
-    "start": "cross-env NODE_ENV=production nodemon dist/server.js",
+    "start": "cross-env NODE_ENV=production node dist/server.js",
     "dev": "cross-env NODE_ENV=development nodemon"
   },
   "author": "hoanthui",
