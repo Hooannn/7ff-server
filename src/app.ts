@@ -5,10 +5,10 @@ import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
 // import { connect, set } from 'mongoose';
-import { NODE_ENV, ORIGIN, CREDENTIALS, PORT } from './config/index';
+import { NODE_ENV, ORIGIN, CREDENTIALS, PORT } from '@config';
 // import { dbConnection } from './databases/index';
-import { Routes } from './interfaces/routes.interface';
-import errorMiddleware from './middlewares/error.middleware';
+import { Routes } from '@interfaces/routes.interface';
+import errorMiddleware from '@middlewares/error.middleware';
 
 class App {
   public app: express.Application;

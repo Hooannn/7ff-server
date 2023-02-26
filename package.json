@@ -4,10 +4,10 @@
   "description": "backend application for ctdl project",
   "main": "index.ts",
   "scripts": {
+    "build": "npx tsc",
     "test": "jest --forceExit --detectOpenHandles",
     "start": "npm run build && cross-env NODE_ENV=production nodemon dist/server.js",
-    "dev": "cross-env NODE_ENV=development nodemon",
-    "build": "swc src -d dist --source-maps --copy-files"
+    "dev": "cross-env NODE_ENV=development nodemon"
   },
   "author": "hoanthui",
   "license": "ISC",
