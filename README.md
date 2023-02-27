@@ -1,19 +1,19 @@
-# Express typescript boilerplate
-Dev docs:
-Checkout to feat/{your feature}
-         or {your name}
-         
+# Documentation
+## Dev
+- Checkout to feat/${your-feature}/${your-name}
+- Or {your-name}
+## Installation
 
+Install the dependencies and devDependencies and start the server.
 
-Install
+```sh
+// install package
 yarn
-
-Dev
+// dev
 yarn dev
-
-Build
+// build
 yarn build
-
-Start
-
+// start
 yarn start
+```
+
