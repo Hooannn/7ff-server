@@ -3,15 +3,14 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { connect, set } from 'mongoose';
 import hpp from 'hpp';
 import morgan from 'morgan';
-// import { connect, set } from 'mongoose';
 import { NODE_ENV, ORIGIN, CREDENTIALS, PORT, LOG_FORMAT } from '@config';
-// import { dbConnection } from './databases/index';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
-
+import { dbConnection } from './databases';
 class App {
   public app: express.Application;
   public env: string;
@@ -42,7 +41,11 @@ class App {
   }
 
   private connectToDatabase() {
-    console.log("connectToDatabase() has't implemented yet");
+    if (this.env !== 'production') {
+      set('debug', true);
+    }
+
+    connect(dbConnection.url, dbConnection.options as any);
   }
 
   private initializeMiddlewares() {
