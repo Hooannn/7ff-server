@@ -131,6 +131,6 @@ dist
 
 # lock
 *.lock
-
+package-lock.json
 #secret file
 accountService.json
