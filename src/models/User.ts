@@ -14,8 +14,10 @@ interface IUser {
     productId: Types.ObjectId;
     quantity: Number;
   }[];
-  role: string;
+  role: IRole;
 }
+
+type IRole = 'User' | 'Admin' | 'SuperAdmin';
 
 const userSchema = new Schema<IUser>(
   {
