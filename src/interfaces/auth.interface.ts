@@ -7,10 +7,7 @@ export interface RequestWithUser extends Request {
 
 export interface AuthJwtPayload extends JwtPayload {
   userId: string;
-  role?: ROLE;
+  role?: IRole;
 }
 
-export enum ROLE {
-  ADMIN = 0,
-  USER = 1,
-}
+type IRole = 'User' | 'Admin' | 'SuperAdmin';

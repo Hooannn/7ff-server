@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, Types } from 'mongoose';
 
 interface IProduct {
   name: string;
@@ -11,9 +11,12 @@ interface IProduct {
     totalSales: number;
     totalUnits: number;
   }[];
-  category: string;
+  category: Types.ObjectId;
   available: boolean;
   rating: number;
+  views?: Types.ObjectId[];
+  viewsCount?: number;
+  featuredImages?: string[];
 }
 
 const productSchema = new Schema<IProduct>(
@@ -40,8 +43,9 @@ const productSchema = new Schema<IProduct>(
       },
     ],
     category: {
-      type: String,
-      enum: ['Sandwich', 'Fried', 'Noodle', 'MilkTea', 'Tea', 'RicePaper'],
+      type: Schema.Types.ObjectId,
+      // enum: ['Sandwich', 'Fried', 'Noodle', 'MilkTea', 'Tea', 'RicePaper'],
+      ref: 'Category',
     },
     available: {
       type: Boolean,
@@ -51,6 +55,11 @@ const productSchema = new Schema<IProduct>(
       type: Number,
       default: 5,
     },
+    views: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    viewsCount: {
+      type: Number,
+    },
+    featuredImages: [{ type: String }],
   },
   { timestamps: true },
 );
