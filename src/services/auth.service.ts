@@ -22,7 +22,7 @@ class AuthService {
   }
 
   public getAccessToken(oldAccessToken: string, refreshToken: string) {
-    if (!refreshToken || !oldAccessToken) throw new HttpException(403, 'INVALID_TOKEN');
+    if (!refreshToken || !oldAccessToken) throw new HttpException(401, 'INVALID_TOKEN');
     const { userId: accessUserId, role } = this.jwt.decode(oldAccessToken) as AuthJwtPayload;
     const { userId: refreshUserId } = this.verifyRefreshToken(refreshToken);
     if (accessUserId !== refreshUserId) throw new HttpException(403, 'INVALID_TOKEN_INFO');
