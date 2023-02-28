@@ -4,7 +4,7 @@ interface IOrder {
   customerId: Types.ObjectId;
   items: {
     productId: Types.ObjectId;
-    quantity: Number;
+    quantity: number;
   }[];
   totalPrice: number;
   discount?: number;
