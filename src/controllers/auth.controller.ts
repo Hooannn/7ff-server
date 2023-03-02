@@ -26,7 +26,7 @@ class AuthController {
       }
       const { email, password } = req.body;
       const data = await this.authService.signInByEmail({ email, password });
-      res.status(201).json({ code: 201, success: true, data, message: successStatus.SIGN_IN_SUCCESSFULLY });
+      res.status(201).json({ code: 200, success: true, data, message: successStatus.SIGN_IN_SUCCESSFULLY });
     } catch (error) {
       next(error);
     }
@@ -36,7 +36,7 @@ class AuthController {
     try {
       const { accessToken, refreshToken } = req.body;
       const data = this.authService.getAccessToken(accessToken, refreshToken);
-      res.status(201).json({ code: 201, success: true, data, message: successStatus.REFRESH_SUCCESSFULLY });
+      res.status(201).json({ code: 200, success: true, data, message: successStatus.REFRESH_SUCCESSFULLY });
     } catch (error) {
       next(error);
     }
