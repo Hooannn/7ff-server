@@ -1,13 +1,26 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import type { AuthJwtPayload } from '@/interfaces/auth.interface';
 import { hashSync, compareSync } from 'bcrypt';
-import { ACCESS_TOKEN_LIFE, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_LIFE, REFRESH_TOKEN_SECRET, SALTED_PASSWORD } from '@config';
+import {
+  ACCESS_TOKEN_LIFE,
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_LIFE,
+  REFRESH_TOKEN_SECRET,
+  SALTED_PASSWORD,
+  RESETPASSWORD_TOKEN_LIFE,
+  RESETPASSWORD_TOKEN_SECRET,
+  CLIENT_URL,
+} from '@config';
 import { HttpException } from '@/exceptions/HttpException';
 import User from '@/models/User';
 import { errorStatus } from '@config';
+import NodemailerService from './nodemailer.service';
+import Jti from '@/models/Jti';
 class AuthService {
   private jwt = jwt;
   private User = User;
+  private Jti = Jti;
+  private nodemailerService = new NodemailerService();
   public async signUpByEmail({ email, password }: { email: string; password: string }) {
     const isEmailExisted = await this.User.findOne({ email });
     if (isEmailExisted) throw new HttpException(409, errorStatus.EMAIL_EXISTED);
@@ -36,6 +49,27 @@ class AuthService {
     return this.jwt.sign({ userId: accessUserId, role }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_LIFE });
   }
 
+  public async forgotPassword(email: string) {
+    const user = await this.User.findOne({ email });
+    if (!user) throw new HttpException(400, errorStatus.UNREGISTERED);
+    const blackJti = new this.Jti({ isUsed: false });
+    await blackJti.save();
+    const token = this.generateResetPasswordToken({ email, jti: blackJti._id.toString() });
+    const resetPasswordUrl = `${CLIENT_URL}/auth/reset-password?token=${token}`;
+    await this.nodemailerService.sendResetPasswordMail(email, resetPasswordUrl);
+    return { token };
+  }
+
+  public async resetPassword(newPassword: string, token: string) {
+    const decodedToken = this.verifyResetPasswordToken(token) as JwtPayload;
+    const jti = await this.Jti.findById(decodedToken?.jti.toString());
+    if (jti.isUsed) throw new HttpException(400, errorStatus.RESET_PASSWORD_EXPIRED);
+    const newHashedPassword = hashSync(newPassword, parseInt(SALTED_PASSWORD));
+    await this.User.findOneAndUpdate({ email: decodedToken.email }, { password: newHashedPassword });
+    await jti.update({ isUsed: true });
+    return { email: decodedToken.email, password: newPassword };
+  }
+
   public verifyAccessToken(token: string) {
     return this.jwt.verify(token, ACCESS_TOKEN_SECRET);
   }
@@ -50,6 +84,14 @@ class AuthService {
 
   private verifyRefreshToken(token: string) {
     return this.jwt.verify(token, REFRESH_TOKEN_SECRET) as AuthJwtPayload;
+  }
+
+  private generateResetPasswordToken({ email, jti }: { email: string; jti: string }) {
+    return this.jwt.sign({ email, jti }, RESETPASSWORD_TOKEN_SECRET, { expiresIn: RESETPASSWORD_TOKEN_LIFE });
+  }
+
+  private verifyResetPasswordToken(token: string) {
+    return this.jwt.verify(token, RESETPASSWORD_TOKEN_SECRET);
   }
 }
 export default AuthService;

@@ -41,6 +41,34 @@ class AuthController {
       next(error);
     }
   };
+
+  public forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      const { email } = req.body;
+      const data = await this.authService.forgotPassword(email);
+      res.status(200).json({ code: 200, success: true, data, message: successStatus.FORGOT_PASSWORD_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      const { password, token } = req.body;
+      const data = await this.authService.resetPassword(password, token);
+      res.status(200).json({ code: 200, success: true, data, message: successStatus.RESET_PASSWORD_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default AuthController;
