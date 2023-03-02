@@ -2,7 +2,7 @@ import { NextFunction, Response } from 'express';
 import { HttpException } from '@exceptions/HttpException';
 import { RequestWithUser } from '@interfaces/auth.interface';
 import AuthService from '@/services/auth.service';
-
+import { errorStatus } from '@/config';
 const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
     const authService = new AuthService();
@@ -12,13 +12,10 @@ const authMiddleware = async (req: RequestWithUser, res: Response, next: NextFun
       req.auth = decodedToken;
       next();
     } else {
-      next(new HttpException(401, 'Authentication token missing'));
+      next(new HttpException(401, errorStatus.NO_CREDENTIALS));
     }
   } catch (error) {
-    if (error.message === 'jwt expired' || error.message === 'invalid signature') {
-      return next(new HttpException(403, error.message)); // 403 for client to refresh token
-    }
-    next(new HttpException(401, 'Wrong authentication token'));
+    next(new HttpException(401, errorStatus.NOT_AUTHORIZED));
   }
 };
 

@@ -1,17 +1,18 @@
 import { Schema, model, Types } from 'mongoose';
 
 interface IUser {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   password: string;
-  address: string;
-  phoneNumber: string;
+  address?: string;
+  phoneNumber?: string;
+  refreshToken?: string;
   avatar?: string;
-  orders: Types.ObjectId[];
-  cartItems: {
+  orders?: Types.ObjectId[];
+  cartItems?: {
     productId: Types.ObjectId;
-    quantity: Number;
+    quantity: number;
   }[];
   role: IRole;
 }
@@ -22,11 +23,9 @@ const userSchema = new Schema<IUser>(
   {
     firstName: {
       type: String,
-      required: true,
     },
     lastName: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -36,25 +35,26 @@ const userSchema = new Schema<IUser>(
     password: {
       type: String,
       required: true,
-      min: 8,
-      max: 25,
     },
     phoneNumber: {
       type: String,
-      required: true,
-      unique: true,
+      // unique: true,
+    },
+    refreshToken: {
+      type: String,
     },
     address: {
       type: String,
-      required: true,
     },
     avatar: {
       type: String,
     },
-    orders: {
-      types: [Schema.Types.ObjectId],
-      ref: 'Order',
-    },
+    orders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Order',
+      },
+    ],
     cartItems: [
       {
         productId: {

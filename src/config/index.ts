@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
-
+export { errorStatus } from './error.status';
+export { successStatus } from './success.status';
 export const CREDENTIALS = process.env.CREDENTIALS === 'true';
 export const {
   DB_URI,
@@ -13,4 +14,5 @@ export const {
   ACCESS_TOKEN_LIFE,
   REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_LIFE,
+  SALTED_PASSWORD,
 } = process.env;
