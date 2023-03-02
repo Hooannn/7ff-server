@@ -9,6 +9,9 @@ interface IOrder {
   totalPrice: number;
   discount?: number;
   note?: string;
+  isDelivery: boolean;
+  deliveryAddress?: string;
+  deliveryPhone?: string;
   status: string;
 }
 
@@ -33,6 +36,12 @@ const orderSchema = new Schema<IOrder>(
       default: 0,
     },
     note: String,
+    isDelivery: {
+      type: Boolean,
+      default: false,
+    },
+    deliveryAddress: String,
+    deliveryPhone: String,
     status: {
       type: String,
       enum: ['Processing', 'Delivering', 'Done', 'Cancelled'],

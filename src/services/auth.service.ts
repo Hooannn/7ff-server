@@ -29,4 +29,5 @@ class AuthService {
     return this.jwt.sign({ userId: accessUserId, role }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_LIFE });
   }
 }
+
 export default AuthService;

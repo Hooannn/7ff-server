@@ -12,7 +12,7 @@ interface IProduct {
     totalUnits: number;
   }[];
   category: Types.ObjectId;
-  available: boolean;
+  isAvailable: boolean;
   rating: number;
   views?: Types.ObjectId[];
   viewsCount?: number;
@@ -44,10 +44,9 @@ const productSchema = new Schema<IProduct>(
     ],
     category: {
       type: Schema.Types.ObjectId,
-      // enum: ['Sandwich', 'Fried', 'Noodle', 'MilkTea', 'Tea', 'RicePaper'],
       ref: 'Category',
     },
-    available: {
+    isAvailable: {
       type: Boolean,
       default: true,
     },
