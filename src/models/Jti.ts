@@ -10,7 +10,7 @@ const JtiSchema = new Schema<Jti>(
       type: Boolean,
     },
   },
-  { timestamps: false },
+  { timestamps: true },
 );
 
 export default model('Jti', JtiSchema);
