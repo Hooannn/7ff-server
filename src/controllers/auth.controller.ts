@@ -34,8 +34,8 @@ class AuthController {
 
   public getAccessToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { accessToken, refreshToken } = req.body;
-      const data = this.authService.getAccessToken(accessToken, refreshToken);
+      const { refreshToken } = req.body;
+      const data = await this.authService.getAccessToken(refreshToken);
       res.status(200).json({ code: 200, success: true, data, message: successStatus.REFRESH_SUCCESSFULLY });
     } catch (error) {
       next(error);

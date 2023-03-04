@@ -41,12 +41,13 @@ class AuthService {
     return { user, refreshToken, accessToken };
   }
 
-  public getAccessToken(oldAccessToken: string, refreshToken: string) {
-    if (!refreshToken || !oldAccessToken) throw new HttpException(401, errorStatus.NO_CREDENTIALS);
-    const { userId: accessUserId, role } = (this.jwt.decode(oldAccessToken) as AuthJwtPayload) || { userId: null, role: null };
+  public async getAccessToken(refreshToken: string) {
+    if (!refreshToken) throw new HttpException(401, errorStatus.NO_CREDENTIALS);
     const { userId: refreshUserId } = this.verifyRefreshToken(refreshToken);
-    if (accessUserId !== refreshUserId) throw new HttpException(403, errorStatus.INVALID_TOKEN_PAYLOAD);
-    return this.jwt.sign({ userId: accessUserId, role }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_LIFE });
+    const user = await this.User.findById(refreshUserId);
+    if (!user) throw new HttpException(400, errorStatus.INVALID_TOKEN_PAYLOAD);
+    const accessToken = this.generateAccessToken({ userId: user._id.toString(), role: user.role });
+    return { accessToken };
   }
 
   public async forgotPassword(email: string) {
