@@ -8,7 +8,7 @@ export const forgotPasswordTemplate = (url: string) => `<!DOCTYPE html>
 <body>
     <div>
         <div>Hi there,</div>
-        <p>You requested for a password reset, kindly use this <a href="${url}">link</a> to reset your password</p>
+        <p>You requested for a password reset, kindly use this <a href="${url}" target="_blank">link</a> to reset your password</p>
         <br/>
         <p>This link will expire in 10 minutes.</p>
         <br/>
