@@ -21,11 +21,11 @@ class AuthService {
   private User = User;
   private Jti = Jti;
   private nodemailerService = new NodemailerService();
-  public async signUpByEmail({ email, password }: { email: string; password: string }) {
+  public async signUpByEmail({ email, password, firstName, lastName }: { email: string; password: string; firstName: string; lastName: string }) {
     const isEmailExisted = await this.User.findOne({ email });
     if (isEmailExisted) throw new HttpException(409, errorStatus.EMAIL_EXISTED);
     const hashedPassword = hashSync(password, parseInt(SALTED_PASSWORD));
-    const user = new this.User({ email, password: hashedPassword, role: 'User' });
+    const user = new this.User({ email, password: hashedPassword, role: 'User', firstName, lastName });
     await user.save();
     return { email, password };
   }
@@ -56,7 +56,7 @@ class AuthService {
     const blackJti = new this.Jti({ isUsed: false });
     await blackJti.save();
     const token = this.generateResetPasswordToken({ email, jti: blackJti._id.toString() });
-    const resetPasswordUrl = `${CLIENT_URL}/auth/reset-password?token=${token}`;
+    const resetPasswordUrl = `${CLIENT_URL}/auth?type=reset&token=${token}`;
     await this.nodemailerService.sendResetPasswordMail(email, resetPasswordUrl);
     return { token };
   }
