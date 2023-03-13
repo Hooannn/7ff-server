@@ -10,8 +10,8 @@ class AuthController {
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const { email, password } = req.body;
-      const data = await this.authService.signUpByEmail({ email, password });
+      const { firstName, lastName, email, password } = req.body;
+      const data = await this.authService.signUpByEmail({ email, password, firstName, lastName });
       res.status(201).json({ code: 201, success: true, data, message: successStatus.SIGN_UP_SUCCESSFULLY });
     } catch (error) {
       next(error);
