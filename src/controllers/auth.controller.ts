@@ -2,6 +2,7 @@ import AuthService from '@/services/auth.service';
 import { NextFunction, Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { successStatus } from '@/config';
+import { RequestWithUser } from '@/interfaces/auth.interface';
 class AuthController {
   private authService = new AuthService();
   public signUpByEmail = async (req: Request, res: Response, next: NextFunction) => {
@@ -65,6 +66,16 @@ class AuthController {
       const { password, token } = req.body;
       const data = await this.authService.resetPassword(password, token);
       res.status(200).json({ code: 200, success: true, data, message: successStatus.RESET_PASSWORD_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const data = await this.authService.getUser(userId);
+      res.status(200).json({ code: 200, success: true, data, message: 'Success' });
     } catch (error) {
       next(error);
     }

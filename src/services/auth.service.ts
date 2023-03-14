@@ -71,6 +71,10 @@ class AuthService {
     return { email: decodedToken.email, password: newPassword };
   }
 
+  public async getUser(id: string) {
+    return await this.User.findById(id).select('-password -refreshToken');
+  }
+
   public verifyAccessToken(token: string) {
     return this.jwt.verify(token, ACCESS_TOKEN_SECRET);
   }
