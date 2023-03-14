@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import AuthController from '@/controllers/auth.controller';
 import { emailValidator, passwordValidator } from '@/validators';
+import authMiddleware from '@/middlewares/auth.middleware';
 class AuthRoute implements Routes {
   public path = '/auth';
   public router = Router();
@@ -17,6 +18,7 @@ class AuthRoute implements Routes {
     this.router.post(`${this.path}/refresh`, this.authController.getAccessToken);
     this.router.post(`${this.path}/forgot-password`, emailValidator(), this.authController.forgotPassword);
     this.router.post(`${this.path}/reset-password`, passwordValidator(), this.authController.resetPassword);
+    this.router.get(`${this.path}/user`, authMiddleware, this.authController.getUser);
   }
 }
 
