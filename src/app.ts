@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { connect, set } from 'mongoose';
 import hpp from 'hpp';
 import morgan from 'morgan';
+import multer from 'multer';
 import { NODE_ENV, ORIGIN, CREDENTIALS, PORT, LOG_FORMAT } from '@config';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
@@ -49,9 +50,14 @@ class App {
   }
 
   private initializeMiddlewares() {
+    const memoryStorage = multer.memoryStorage();
+    const upload = multer({
+      storage: memoryStorage,
+    });
     this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());
+    this.app.use(upload.array('file'));
     this.app.use(helmet());
     this.app.use(compression());
     this.app.use(express.json());
