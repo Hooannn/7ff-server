@@ -15,7 +15,7 @@ class FilesController {
       const fileFormat = file.mimetype.split('/')[1];
       const { base64 } = bufferToDataURI(fileFormat, file.buffer);
       const data = await this.filesService.uploadToCloudinary({ base64, fileFormat, folder });
-      res.status(200).json({ code: 201, success: true, data });
+      res.status(201).json({ code: 201, success: true, data });
     } catch (error) {
       next(error);
     }
