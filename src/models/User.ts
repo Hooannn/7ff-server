@@ -1,6 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 
-interface IUser {
+export interface IUser {
   firstName?: string;
   lastName?: string;
   email: string;
@@ -72,5 +72,10 @@ const userSchema = new Schema<IUser>(
   },
   { timestamps: true },
 );
+
+userSchema.pre('save', function (next) {
+  if (!this.avatar) this.avatar = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSqtrHsVnbfPaERaPm8v_vcvIXYxCGR0Lnbcw&usqp=CAU';
+  next();
+});
 
 export default model('User', userSchema);
