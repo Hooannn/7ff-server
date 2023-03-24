@@ -7,7 +7,9 @@ class UsersService {
   private User = User;
 
   public async getAllUsers({ skip, limit }: { skip?: number; limit?: number }) {
-    return await this.User.find(null, null, { limit, skip });
+    const total = await this.User.countDocuments();
+    const users = await this.User.find(null, null, { limit, skip });
+    return { total, users };
   }
 
   public async addUser(reqUser: IUser) {
