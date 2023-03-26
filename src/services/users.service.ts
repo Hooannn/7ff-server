@@ -6,9 +6,11 @@ import { hashSync } from 'bcrypt';
 class UsersService {
   private User = User;
 
-  public async getAllUsers({ skip, limit }: { skip?: number; limit?: number }) {
-    const total = await this.User.countDocuments();
-    const users = await this.User.find(null, null, { limit, skip });
+  public async getAllUsers({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
+    const parseFilter = JSON.parse(filter ? filter : '{}');
+    const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
+    const total = await this.User.countDocuments(parseFilter).sort(parseSort);
+    const users = await this.User.find(parseFilter, null, { limit, skip }).sort(parseSort);
     return { total, users };
   }
 
