@@ -5,8 +5,13 @@ class UsersController {
   private usersService = new UsersService();
   public getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { skip, limit } = req.query;
-      const { total, users } = await this.usersService.getAllUsers({ skip: parseInt(skip?.toString()), limit: parseInt(limit?.toString()) });
+      const { skip, limit, filter, sort } = req.query;
+      const { total, users } = await this.usersService.getAllUsers({
+        skip: parseInt(skip?.toString()),
+        limit: parseInt(limit?.toString()),
+        filter: filter?.toString(),
+        sort: sort?.toString(),
+      });
       res.status(200).json({ code: 200, success: true, data: users, total, took: users.length });
     } catch (error) {
       next(error);
