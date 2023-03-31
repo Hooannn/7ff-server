@@ -17,6 +17,10 @@
 - Checkout to your branch
 - Always pull latest commit from master
 
+## Devtools
+
+- postman: https://www.postman.com/
+
 ## Installation
 
 Install the dependencies and devDependencies and start the server.
