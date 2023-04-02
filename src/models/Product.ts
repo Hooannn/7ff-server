@@ -11,6 +11,7 @@ interface IProduct {
     totalSales: number;
     totalUnits: number;
   }[];
+  stocks: number;
   category: Types.ObjectId;
   isAvailable: boolean;
   rating: number;
@@ -30,6 +31,10 @@ const productSchema = new Schema<IProduct>(
       required: true,
     },
     price: {
+      type: Number,
+      required: true,
+    },
+    stocks: {
       type: Number,
       required: true,
     },

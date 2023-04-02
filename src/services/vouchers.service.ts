@@ -14,10 +14,9 @@ class VouchersService {
   }
 
   public async addVoucher(reqVoucher: IVoucher) {
-    const { code, discountAmount, discountType, expiredDate } = reqVoucher;
-    const isVoucherExisted = await this.Voucher.findOne({ code: code.toUpperCase() });
+    const isVoucherExisted = await this.Voucher.findOne({ code: reqVoucher.code });
     if (isVoucherExisted) throw new HttpException(400, errorStatus.BAD_REQUEST);
-    const voucher = new this.Voucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate });
+    const voucher = new this.Voucher(reqVoucher);
     await voucher.save();
     return voucher;
   }

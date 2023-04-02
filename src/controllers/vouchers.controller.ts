@@ -20,9 +20,9 @@ class VouchersController {
 
   public addVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const reqVoucher = req.body;
-      const user = await this.vouchersService.addVoucher(reqVoucher);
-      res.status(201).json({ code: 201, success: true, data: user, message: successStatus.CREATE_SUCCESSFULLY });
+      const { code, discountAmount, discountType, expiredDate } = req.body;
+      const voucher = await this.vouchersService.addVoucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate });
+      res.status(201).json({ code: 201, success: true, data: voucher, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
     }
