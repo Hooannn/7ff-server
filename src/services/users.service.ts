@@ -14,6 +14,10 @@ class UsersService {
     return { total, users };
   }
 
+  public async getUserById(id: string) {
+    return await this.User.findById(id);
+  }
+
   public async addUser(reqUser: IUser) {
     const { firstName, lastName, avatar, password, phoneNumber, role, email, address } = reqUser;
     const isEmailExisted = await this.User.findOne({ email });

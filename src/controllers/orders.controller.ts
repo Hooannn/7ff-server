@@ -1,8 +1,14 @@
-import { successStatus } from '@/config';
+import { CLIENT_URL, successStatus } from '@/config';
+import NodemailerService from '@/services/nodemailer.service';
 import OrdersService from '@/services/orders.service';
+import UsersService from '@/services/users.service';
 import { NextFunction, Request, Response } from 'express';
+import { validationResult } from 'express-validator';
 class OrdersController {
   private ordersService = new OrdersService();
+  private usersService = new UsersService();
+  private nodemailerService = new NodemailerService();
+
   public getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { skip, limit, filter, sort } = req.query;
@@ -41,8 +47,15 @@ class OrdersController {
 
   public checkoutThenCreateOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const checkoutReq = req.body;
-      const order = await this.ordersService.createOrder(checkoutReq);
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+      const { customerId, isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
+      const order = await this.ordersService.createOrder({ customerId, voucher, isDelivery, deliveryAddress, deliveryPhone, items, note });
+      const customerEmail = (await this.usersService.getUserById(customerId.toString()))?.email;
+      const mailHref = `${CLIENT_URL}/orders`;
+      if (customerEmail) this.nodemailerService.sendOrderConfirmationEmail(customerEmail, order, mailHref);
       res.status(201).json({ code: 201, success: true, data: order, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
       next(error);

@@ -1,9 +1,10 @@
+import ProductsService from '@/services/products.service';
 import { Schema, model, Types } from 'mongoose';
 
 export interface IOrder {
   customerId: Types.ObjectId;
   items: {
-    productId: Types.ObjectId;
+    productId: Types.ObjectId | string;
     quantity: number;
   }[];
   totalPrice: number;
@@ -67,7 +68,7 @@ async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: 
       priceAfterDiscount = totalPrice - voucher.discountAmount;
     }
   }
-  return priceAfterDiscount;
+  return priceAfterDiscount || totalPrice;
 }
 
 async function getOriginalPrice(appliedVoucher: string | null, currentPrice: number) {
@@ -82,19 +83,28 @@ async function getOriginalPrice(appliedVoucher: string | null, currentPrice: num
       originalPrice = currentPrice + voucher.discountAmount;
     }
   }
-  return originalPrice;
+  return originalPrice || currentPrice;
+}
+
+async function calculateTotalPrice(items: { productId: string | Types.ObjectId; quantity: number }[]) {
+  const productsService = new ProductsService();
+  const { totalPrice, failedProducts } = await productsService.getProductsPrice(items);
+  return { totalPrice: totalPrice || 0, failedProducts };
 }
 
 orderSchema.pre('save', async function (next) {
+  const { totalPrice, failedProducts } = await calculateTotalPrice(this.items);
   const appliedVoucher = this.voucher?.toString();
-  if (!appliedVoucher) return next();
-  const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, this.totalPrice, () => {
+  const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, () => {
     this.voucher = null;
   });
+  if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.productId.toString));
   this.totalPrice = priceAfterDiscount;
   next();
 });
 
+// USECASE: Admin update order items or voucher -> calculate totalPrice again
+// TODO: Handle update order items case
 orderSchema.pre('findOneAndUpdate', async function (next) {
   const modifiedVoucher = (this.getUpdate() as any).voucher;
   const order = await this.model.findOne(this.getQuery());
@@ -110,8 +120,8 @@ orderSchema.pre('findOneAndUpdate', async function (next) {
   if (previousVoucher == modifiedVoucher.toString()) {
     return next();
   }
-  const currentPrice = order.totalPrice;
-  const priceAfterDiscount = await getPriceAfterDiscount(modifiedVoucher, currentPrice, () => {
+  const originalPrice = await getOriginalPrice(previousVoucher, order.totalPrice);
+  const priceAfterDiscount = await getPriceAfterDiscount(modifiedVoucher, originalPrice, () => {
     this.set('voucher', null);
   });
   this.set('totalPrice', priceAfterDiscount);

@@ -1,6 +1,4 @@
-import { errorStatus } from '@/config';
 import Order, { IOrder } from '@/models/Order';
-import { HttpException } from '@/exceptions/HttpException';
 class OrdersService {
   private Order = Order;
 
@@ -12,7 +10,7 @@ class OrdersService {
     return { total, orders };
   }
 
-  public async createOrder(order: IOrder) {
+  public async createOrder(order: Partial<IOrder>) {
     const newOrder = new this.Order(order);
     await newOrder.save();
     return newOrder;
