@@ -13,7 +13,7 @@ class ProductsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:productId`, this.productsController.getProductById);
-    this.router.get('${this.path)', adminMiddleware, this.productsController.getAllProduct);
+    this.router.get(`${this.path}`, adminMiddleware, this.productsController.getAllProduct);
     this.router.post(`${this.path}`, adminMiddleware, this.productsController.addProduct);
     this.router.delete(`${this.path}`, adminMiddleware, this.productsController.deleteProduct);
     this.router.patch(`${this.path}`, adminMiddleware, this.productsController.updateProduct);
