@@ -1,4 +1,5 @@
 import { successStatus } from '@/config';
+import { RequestWithUser } from '@/interfaces/auth.interface';
 import UsersService from '@/services/users.service';
 import { NextFunction, Request, Response } from 'express';
 class UsersController {
@@ -43,6 +44,17 @@ class UsersController {
       const { id } = req.query;
       const user = req.body;
       const updatedUser = await this.usersService.updateUser(id.toString(), user);
+      res.status(200).json({ code: 200, success: true, data: updatedUser, message: successStatus.UPDATE_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateProfile = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const user = req.body;
+      const updatedUser = await this.usersService.updateUser(userId.toString(), user);
       res.status(200).json({ code: 200, success: true, data: updatedUser, message: successStatus.UPDATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
