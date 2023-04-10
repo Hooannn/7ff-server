@@ -6,7 +6,7 @@ class OrdersService {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
     const total = await this.Order.countDocuments(parseFilter).sort(parseSort);
-    const orders = await this.Order.find(parseFilter, null, { limit, skip }).sort(parseSort);
+    const orders = await this.Order.find(parseFilter, null, { limit, skip }).sort(parseSort).populate('items.productId voucher');
     return { total, orders };
   }
 

@@ -13,7 +13,7 @@ export interface IOrder {
   isDelivery: boolean;
   deliveryAddress?: string;
   deliveryPhone?: string;
-  status: string;
+  status: 'Processing' | 'Delivering' | 'Done' | 'Cancelled';
 }
 
 const orderSchema = new Schema<IOrder>(
