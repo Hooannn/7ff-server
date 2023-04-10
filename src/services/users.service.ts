@@ -1,7 +1,7 @@
 import { errorStatus, SALTED_PASSWORD } from '@/config';
 import { HttpException } from '@/exceptions/HttpException';
 import User, { IUser } from '@/models/User';
-import { hashSync } from 'bcrypt';
+import { compareSync, hashSync } from 'bcrypt';
 
 class UsersService {
   private User = User;
@@ -42,6 +42,14 @@ class UsersService {
       ? { password: hashedPassword, lastName, firstName, phoneNumber, address, avatar, role }
       : { lastName, firstName, phoneNumber, address, avatar, role };
     return await this.User.findOneAndUpdate({ _id: userId }, updatedUser, { returnOriginal: false });
+  }
+
+  public async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const target = await this.getUserById(userId);
+    const isPasswordMatched = compareSync(currentPassword, target.password.toString());
+    if (!isPasswordMatched) throw new HttpException(400, errorStatus.WRONG_PASSWORD);
+    const hashedPassword = hashSync(newPassword, parseInt(SALTED_PASSWORD));
+    return await this.User.findOneAndUpdate({ _id: userId }, { password: hashedPassword }, { returnOriginal: false });
   }
 }
 

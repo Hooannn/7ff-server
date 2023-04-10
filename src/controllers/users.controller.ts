@@ -60,6 +60,17 @@ class UsersController {
       next(error);
     }
   };
+
+  public changeProfilePassword = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const { currentPassword, newPassword } = req.body;
+      const updatedUser = await this.usersService.changePassword(userId.toString(), currentPassword, newPassword);
+      res.status(200).json({ code: 200, success: true, data: updatedUser, message: successStatus.UPDATE_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default UsersController;
