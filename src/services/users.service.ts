@@ -10,7 +10,7 @@ class UsersService {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
     const total = await this.User.countDocuments(parseFilter).sort(parseSort);
-    const users = await this.User.find(parseFilter, null, { limit, skip }).sort(parseSort);
+    const users = await this.User.find(parseFilter, null, { limit, skip }).sort(parseSort).select('-password');
     return { total, users };
   }
 
