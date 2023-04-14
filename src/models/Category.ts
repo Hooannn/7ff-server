@@ -1,20 +1,32 @@
 import { Schema, model } from 'mongoose';
-
+import type { IContent } from '@/interfaces';
 interface ICategory {
-  name: string;
-  description: string;
+  name: IContent;
+  description: IContent;
   icon?: string;
 }
 
 const categorySchema = new Schema<ICategory>(
   {
     name: {
-      type: String,
-      required: true,
+      vi: {
+        type: String,
+        required: true,
+      },
+      en: {
+        type: String,
+        required: true,
+      },
     },
     description: {
-      type: String,
-      required: true,
+      vi: {
+        type: String,
+        required: true,
+      },
+      en: {
+        type: String,
+        required: true,
+      },
     },
     icon: {
       type: String,

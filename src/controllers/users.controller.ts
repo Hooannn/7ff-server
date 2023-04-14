@@ -1,5 +1,5 @@
 import { successStatus } from '@/config';
-import { RequestWithUser } from '@/interfaces/auth.interface';
+import { RequestWithUser } from '@/interfaces';
 import UsersService from '@/services/users.service';
 import { NextFunction, Request, Response } from 'express';
 class UsersController {

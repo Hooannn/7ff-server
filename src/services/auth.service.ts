@@ -1,5 +1,5 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import type { AuthJwtPayload } from '@/interfaces/auth.interface';
+import type { AuthJwtPayload } from '@/interfaces';
 import { hashSync, compareSync } from 'bcrypt';
 import {
   ACCESS_TOKEN_LIFE,

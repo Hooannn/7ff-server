@@ -2,7 +2,7 @@ import AuthService from '@/services/auth.service';
 import { NextFunction, Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { successStatus } from '@/config';
-import { RequestWithUser } from '@/interfaces/auth.interface';
+import { RequestWithUser } from '@/interfaces';
 class AuthController {
   private authService = new AuthService();
   public signUpByEmail = async (req: Request, res: Response, next: NextFunction) => {
