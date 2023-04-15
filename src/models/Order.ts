@@ -1,4 +1,4 @@
-import ProductsService from '@/services/products.service';
+import ProductsService from '../services/products.service';
 import { Schema, model, Types } from 'mongoose';
 
 export interface IOrder {

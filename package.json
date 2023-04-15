@@ -35,6 +35,8 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "devDependencies": {
+    "dayjs": "^1.11.6",
+    "@faker-js/faker": "^7.6.0",
     "@types/multer": "^1.4.7",
     "@types/bcrypt": "^5.0.0",
     "@types/cookie-parser": "^1.4.3",

@@ -1,36 +1,52 @@
+// SHOULD RUN drop.ts script before running this
+import Order from '../../models/Order';
+import { faker } from '@faker-js/faker';
 import { connect, disconnect } from 'mongoose';
 import Product from '../../models/Product';
 import Voucher from '../../models/Voucher';
 import Category from '../../models/Category';
+import User from '../../models/User';
 import { dbConnection } from '..';
+faker.setLocale('vi');
+// USERS
+export const execUserSeeds = (n = 100) => {
+  const userSeeds = [];
+  for (let i = 0; i <= n; i++) {
+    const fakeUser = {
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+      avatar: faker.image.avatar(),
+      email: faker.internet.email(),
+      address: faker.address.cityName(),
+      password: faker.internet.password(),
+      phoneNumber: faker.phone.number(),
+      role: 'User',
+      createdAt: faker.date.between(new Date('2021-01-01').getTime(), Date.now()),
+    };
+    userSeeds.push(fakeUser);
+  }
+  return User.insertMany(userSeeds);
+};
 // PRODUCTS
-export const execProductSeeds = () => {
-  return Product.insertMany([
-    {
-      name: 'Product 1',
-      description: 'Product 1 description',
-      price: 100,
-      stocks: 10,
-    },
-    {
-      name: 'Product 2',
-      description: 'Product 2 description',
-      price: 2000,
-      stocks: 10,
-    },
-    {
-      name: 'Product 3',
-      description: 'Product 3 description',
-      price: 30000,
-      stocks: 10,
-    },
-    {
-      name: 'Product 4',
-      description: 'Product 4 description',
-      price: 400,
-      stocks: 10,
-    },
-  ]);
+export const execProductSeeds = (n = 30) => {
+  const productSeeds = [];
+  for (let i = 0; i <= n; i++) {
+    const fakeProduct = {
+      name: {
+        vi: faker.commerce.productName(),
+        en: faker.commerce.productName(),
+      },
+      description: {
+        vi: faker.commerce.productDescription(),
+        en: faker.commerce.productDescription(),
+      },
+      price: faker.commerce.price(),
+      stocks: 1000000,
+      featuredImages: faker.helpers.arrayElements(new Array(10).fill(faker.image.food())),
+    };
+    productSeeds.push(fakeProduct);
+  }
+  return Product.insertMany(productSeeds);
 };
 
 // VOUCHERs
@@ -64,30 +80,43 @@ export const execVoucherSeeds = () => {
 };
 
 // CATEGORIES
-export const execCategorySeeds = () => {
-  return Category.insertMany([
-    {
-      name: 'Category 1',
-      description: 'Category 1',
-    },
-    {
-      name: 'Category 2',
-      description: 'Category 2',
-    },
-    {
-      name: 'Category 3',
-      description: 'Category 3',
-    },
-    {
-      name: 'Category 4',
-      description: 'Category 4',
-    },
-  ]);
+export const execCategorySeeds = (n = 10) => {
+  const categorySeeds = [];
+  for (let i = 0; i <= n; i++) {
+    const fakeCategory = {
+      name: {
+        vi: faker.commerce.department(),
+        en: faker.commerce.department(),
+      },
+      description: {
+        vi: faker.commerce.productAdjective(),
+        en: faker.commerce.productAdjective(),
+      },
+    };
+    categorySeeds.push(fakeCategory);
+  }
+  return Category.insertMany(categorySeeds);
+};
+
+// ORDERS
+export const execOrderSeeds = (n = 100) => {
+  const orderSeeds = [];
+  for (let i = 0; i <= n; i++) {
+    const fakeOrder = {
+      totalPrice: faker.commerce.price(50000, 2000000),
+      status: 'Done',
+      createdAt: faker.date.between(new Date('2021-01-01').getTime(), Date.now()),
+    };
+    orderSeeds.push(fakeOrder);
+  }
+  return Order.insertMany(orderSeeds);
 };
 
 connect(dbConnection.url, dbConnection.options as any, async () => {
   await execProductSeeds();
   await execCategorySeeds();
   await execVoucherSeeds();
+  await execUserSeeds();
+  await execOrderSeeds();
   disconnect();
 });
