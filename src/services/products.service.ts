@@ -1,4 +1,4 @@
-import Product, { IProduct } from '@/models/Product'
+import Product, { IProduct } from '../models/Product';
 import { Types, mongo } from 'mongoose';
 class ProductsService {
   private Product = Product;
@@ -30,18 +30,18 @@ class ProductsService {
     return { total, products };
   }
 
-  public async addProduct(reqProduct: IProduct){
+  public async addProduct(reqProduct: IProduct) {
     const product = new this.Product(reqProduct);
     await product.save();
     return product;
   }
 
-  public async deleteProduct(productId: string){
+  public async deleteProduct(productId: string) {
     return this.Product.findByIdAndDelete(productId);
   }
 
-  public async updateProduct(productId: string, product: IProduct){
-    return await this.Product.findOneAndUpdate({ _id: productId }, product, { returnOriginal: false });    
+  public async updateProduct(productId: string, product: IProduct) {
+    return await this.Product.findOneAndUpdate({ _id: productId }, product, { returnOriginal: false });
   }
 }
 

@@ -2,7 +2,6 @@ import { errorStatus, SALTED_PASSWORD } from '@/config';
 import { HttpException } from '@/exceptions/HttpException';
 import User, { IUser } from '@/models/User';
 import { compareSync, hashSync } from 'bcrypt';
-
 class UsersService {
   private User = User;
 
@@ -50,6 +49,17 @@ class UsersService {
     if (!isPasswordMatched) throw new HttpException(400, errorStatus.WRONG_PASSWORD);
     const hashedPassword = hashSync(newPassword, parseInt(SALTED_PASSWORD));
     return await this.User.findOneAndUpdate({ _id: userId }, { password: hashedPassword }, { returnOriginal: false });
+  }
+
+  public async getSummaryUsers(from: number, to: number) {
+    const range = to - from;
+    const currentCount = await this.User.countDocuments({
+      createdAt: { $gte: from, $lte: to },
+    });
+    const previousCount = await this.User.countDocuments({
+      createdAt: { $gte: from - range, $lte: from },
+    });
+    return { currentCount, previousCount };
   }
 }
 
