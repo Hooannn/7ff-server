@@ -21,7 +21,7 @@ export const execUserSeeds = (n = 100) => {
       password: faker.internet.password(),
       phoneNumber: faker.phone.number(),
       role: 'User',
-      createdAt: faker.date.between(new Date('2021-01-01').getTime(), Date.now()),
+      createdAt: faker.date.between(new Date('2023-01-01').getTime(), Date.now()),
     };
     userSeeds.push(fakeUser);
   }
@@ -105,7 +105,7 @@ export const execOrderSeeds = (n = 100) => {
     const fakeOrder = {
       totalPrice: faker.commerce.price(50000, 2000000),
       status: 'Done',
-      createdAt: faker.date.between(new Date('2021-01-01').getTime(), Date.now()),
+      createdAt: faker.date.between(new Date('2023-01-01').getTime(), Date.now()),
     };
     orderSeeds.push(fakeOrder);
   }
