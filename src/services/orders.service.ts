@@ -28,6 +28,10 @@ interface ChartData {
 class OrdersService {
   private Order = Order;
 
+  public async getOrdersByCustomerId(customerId: string) {
+    return await this.Order.find({ customerId: customerId });
+  }
+
   public async getAllOrders({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');

@@ -80,6 +80,17 @@ class AuthController {
       next(error);
     }
   };
+
+  public deactivateAccount = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const { password } = req.body;
+      const data = await this.authService.deactivateAccount({ userId, password });
+      res.status(200).json({ code: 200, success: true, data, message: 'Success' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default AuthController;

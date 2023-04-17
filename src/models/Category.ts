@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 import type { IContent } from '@/interfaces';
-interface ICategory {
+export interface ICategory {
   name: IContent;
   description: IContent;
   icon?: string;

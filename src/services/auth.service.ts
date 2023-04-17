@@ -13,14 +13,18 @@ import {
 } from '@config';
 import { HttpException } from '@/exceptions/HttpException';
 import User from '@/models/User';
+import DeactiveUser from '@/models/DeactiveUser';
 import { errorStatus } from '@config';
 import NodemailerService from './nodemailer.service';
 import Jti from '@/models/Jti';
+import OrdersService from './orders.service';
 class AuthService {
   private jwt = jwt;
   private User = User;
+  private DeactiveUser = DeactiveUser;
   private Jti = Jti;
   private nodemailerService = new NodemailerService();
+  private ordersService = new OrdersService();
   public async signUpByEmail({ email, password, firstName, lastName }: { email: string; password: string; firstName: string; lastName: string }) {
     const isEmailExisted = await this.User.findOne({ email });
     if (isEmailExisted) throw new HttpException(409, errorStatus.EMAIL_EXISTED);
@@ -69,6 +73,20 @@ class AuthService {
     await this.User.findOneAndUpdate({ email: decodedToken.email }, { password: newHashedPassword });
     await jti.update({ isUsed: true });
     return { email: decodedToken.email, password: newPassword };
+  }
+
+  public async deactivateAccount({ userId, password }: { userId: string; password: string }) {
+    const target = await this.User.findById(userId);
+    if (!target) throw new HttpException(400, errorStatus.USER_NOT_FOUND);
+    const isPasswordMatched = compareSync(password, target.password.toString());
+    if (!isPasswordMatched) throw new HttpException(400, errorStatus.WRONG_PASSWORD);
+    const orders = await this.ordersService.getOrdersByCustomerId(userId);
+    orders.forEach(async order => {
+      await order.update({ status: 'Cancelled' });
+    });
+    const deactiveUser = new this.DeactiveUser({ ...target }._doc);
+    await deactiveUser.save();
+    return this.User.findByIdAndDelete(userId);
   }
 
   public async getUser(id: string) {
