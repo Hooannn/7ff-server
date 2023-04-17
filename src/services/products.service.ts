@@ -22,7 +22,7 @@ class ProductsService {
     return { totalPrice, failedProducts };
   }
 
-  public async getAllProduct({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
+  public async getAllProducts({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
     const total = await this.Product.countDocuments(parseFilter).sort(parseSort);

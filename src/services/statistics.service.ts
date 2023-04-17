@@ -1,6 +1,5 @@
 import OrdersService from './orders.service';
 import UsersService from './users.service';
-
 class StatisticsService {
   private usersService = new UsersService();
   private ordersService = new OrdersService();
