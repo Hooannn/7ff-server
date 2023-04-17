@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import Order, { IOrder } from '@/models/Order';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import tz from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(tz);
+dayjs.extend(utc);
+dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
 import { Document, Types } from 'mongoose';
 
 interface CreateChartParams {
@@ -16,7 +21,7 @@ interface CreateChartParams {
 }
 
 interface ChartData {
-  date: string;
+  date: Dayjs;
   name: string;
   value: number;
 }
@@ -97,56 +102,56 @@ class OrdersService {
   }
 
   private async createDailyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs(from).startOf('day');
+    const startDate = dayjs.tz(from).startOf('day');
     const results: ChartData[] = Array.from(Array(24), (_, i) => ({
-      date: startDate.add(i, 'hour').toISOString(),
+      date: startDate.add(i, 'hour'),
       name: startDate.add(i, 'hour').format('hh:mm'),
       value: 0,
     }));
     orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs(createdAt).isSame(dayjs(result.date), 'hour'));
+      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'hour'));
       results[index].value = results[index].value + totalPrice;
     });
     return results;
   }
 
   private async createWeeklyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs(from).startOf('day');
+    const startDate = dayjs.tz(from).startOf('day');
     const results: ChartData[] = Array.from(Array(7), (_, i) => ({
-      date: startDate.add(i, 'day').toISOString(),
+      date: startDate.add(i, 'day'),
       name: startDate.add(i, 'day').format('dddd DD-MM'),
       value: 0,
     }));
     orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs(createdAt).isSame(dayjs(result.date), 'day'));
+      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'day'));
       results[index].value = results[index].value + totalPrice;
     });
     return results;
   }
 
   private async createMonthlyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs(from).startOf('day');
+    const startDate = dayjs.tz(from).startOf('day');
     const results: ChartData[] = Array.from(Array(startDate.daysInMonth()), (_, i) => ({
-      date: startDate.add(i, 'day').toISOString(),
+      date: startDate.add(i, 'day'),
       name: startDate.add(i, 'day').format('dddd DD-MM'),
       value: 0,
     }));
     orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs(createdAt).isSame(dayjs(result.date), 'day'));
+      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'day'));
       results[index].value = results[index].value + totalPrice;
     });
     return results;
   }
 
   private async createYearlyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs(from).startOf('day');
+    const startDate = dayjs.tz(from).startOf('day');
     const results: ChartData[] = Array.from(Array(12), (_, i) => ({
-      date: startDate.add(i, 'month').toISOString(),
+      date: startDate.add(i, 'month'),
       name: startDate.add(i, 'month').format('MMMM'),
       value: 0,
     }));
     orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs(createdAt).isSame(dayjs(result.date), 'month'));
+      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'month'));
       results[index].value = results[index].value + totalPrice;
     });
     return results;
