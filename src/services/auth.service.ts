@@ -84,7 +84,7 @@ class AuthService {
     orders.forEach(async order => {
       await order.update({ status: 'Cancelled' });
     });
-    const deactiveUser = new this.DeactiveUser({ ...target }._doc);
+    const deactiveUser = new this.DeactiveUser(({ ...target } as any)._doc);
     await deactiveUser.save();
     return this.User.findByIdAndDelete(userId);
   }
