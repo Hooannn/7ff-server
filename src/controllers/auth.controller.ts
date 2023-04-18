@@ -86,7 +86,11 @@ class AuthController {
       const { userId } = req.auth;
       const { password } = req.body;
       const data = await this.authService.deactivateAccount({ userId, password });
-      res.status(200).json({ code: 200, success: true, data, message: 'Success' });
+      res
+        .clearCookie('refresh_token', { path: '/' })
+        .clearCookie('access_token', { path: '/' })
+        .status(200)
+        .json({ code: 200, success: true, data, message: 'Success' });
     } catch (error) {
       next(error);
     }
