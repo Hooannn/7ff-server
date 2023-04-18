@@ -26,7 +26,7 @@ class ProductsService {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
     const total = await this.Product.countDocuments(parseFilter).sort(parseSort);
-    const products = await this.Product.find(parseFilter, null, { limit, skip }).sort(parseSort);
+    const products = await this.Product.find(parseFilter, null, { limit, skip }).sort(parseSort).populate('category');
     return { total, products };
   }
 

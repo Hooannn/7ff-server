@@ -49,7 +49,8 @@ const productSchema = new Schema<IProduct>(
     },
     stocks: {
       type: Number,
-      required: true,
+      required: false,
+      default: 1000000,
     },
     yearlyTotalSales: Number,
     yearlyTotalSoldUnits: Number,
