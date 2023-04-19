@@ -3,7 +3,7 @@ import { Types, mongo } from 'mongoose';
 class ProductsService {
   private Product = Product;
   public async getProductById(productId: string) {
-    return await this.Product.findById(productId);
+    return await this.Product.findById(productId).populate('category');
   }
 
   public async getProductsPrice(items: { productId: string | Types.ObjectId; quantity: number }[]) {
