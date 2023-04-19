@@ -13,7 +13,7 @@ class CategoriesRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, adminMiddleware, this.categoriesController.getAllCategories);
+    this.router.get(`${this.path}`, this.categoriesController.getAllCategories);
     this.router.post(`${this.path}`, adminMiddleware, this.categoriesController.addCategory);
     this.router.delete(`${this.path}`, adminMiddleware, this.categoriesController.deleteCategory);
     this.router.patch(`${this.path}`, adminMiddleware, this.categoriesController.updateCategory);
