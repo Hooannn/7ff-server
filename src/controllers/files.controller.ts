@@ -31,6 +31,17 @@ class FilesController {
       next(error);
     }
   };
+
+  public deleteFileByUrl = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { url } = req.body;
+      if (!url) throw new HttpException(400, errorStatus.BAD_REQUEST);
+      const data = await this.filesService.deleteFileByUrl(url.toString());
+      res.status(200).json({ code: 200, success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FilesController;

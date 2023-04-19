@@ -21,6 +21,21 @@ class FilesService {
     const { search } = this.cloudinary;
     return await search.expression(`folder=${folder}`).execute();
   }
+
+  public async deleteFileByUrl(targetUrl: string) {
+    const { uploader, url, api } = this.cloudinary;
+    const publicId = url(targetUrl, { type: 'fetch' }).split('/').slice(-1)[0].split('.')[0];
+    const folderName = url(targetUrl, { type: 'fetch' }).split('/').slice(-2, -1)[0];
+
+    let fullPublicId = publicId;
+    if (folderName) {
+      const { folders } = await api.root_folders();
+      if (folders.filter(folder => folder.name === folderName || folder.path === folderName).length > 0) {
+        fullPublicId = `${folderName}/${publicId}`;
+      }
+    }
+    return await uploader.destroy(fullPublicId);
+  }
 }
 
 export default FilesService;
