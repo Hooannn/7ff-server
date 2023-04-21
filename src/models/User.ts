@@ -11,7 +11,7 @@ export interface IUser {
   avatar?: string;
   orders?: Types.ObjectId[];
   cartItems?: {
-    productId: Types.ObjectId;
+    product: Types.ObjectId;
     quantity: number;
   }[];
   role: IRole;
@@ -57,7 +57,7 @@ const userSchema = new Schema<IUser>(
     ],
     cartItems: [
       {
-        productId: {
+        product: {
           type: Schema.Types.ObjectId,
           ref: 'Product',
         },
