@@ -61,6 +61,32 @@ class UsersService {
     });
     return { currentCount, previousCount };
   }
+
+  public async getCartItems(userId: string) {
+    const { cartItems } = await this.User.findById(userId).select('cartItems').populate('cartItems.product');
+    return cartItems;
+  }
+
+  public async addCartItem({ userId, product, quantity }: { userId: string; product: string; quantity: number }) {
+    const { modifiedCount } = await User.updateOne(
+      { _id: userId, 'cartItems.product': product },
+      { $inc: { 'cartItems.$[item].quantity': quantity } },
+      { arrayFilters: [{ 'item.product': product }] },
+    );
+
+    if (modifiedCount === 0) {
+      await User.updateOne({ _id: userId }, { $addToSet: { cartItems: { product, quantity } } });
+    }
+  }
+
+  public async removeCartItem({ userId, product, quantity }: { userId: string; product: string; quantity: number }) {
+    await User.updateOne({ _id: userId }, { $inc: { 'cartItems.$[item].quantity': -quantity } }, { arrayFilters: [{ 'item.product': product }] });
+    await User.updateOne({ _id: userId, 'cartItems.quantity': { $lte: 0 } }, { $pull: { cartItems: { quantity: { $lte: 0 } } } });
+  }
+
+  public async resetCartItems(userId: string) {
+    return await this.User.findByIdAndUpdate(userId, { cartItems: [] });
+  }
 }
 
 export default UsersService;

@@ -4,7 +4,7 @@ import { Schema, model, Types } from 'mongoose';
 export interface IOrder {
   customerId: Types.ObjectId;
   items: {
-    productId: Types.ObjectId | string;
+    product: Types.ObjectId | string;
     quantity: number;
   }[];
   totalPrice: number;
@@ -24,7 +24,7 @@ const orderSchema = new Schema<IOrder>(
     },
     items: [
       {
-        productId: {
+        product: {
           type: Schema.Types.ObjectId,
           ref: 'Product',
         },
@@ -86,7 +86,7 @@ async function getOriginalPrice(appliedVoucher: string | null, currentPrice: num
   return originalPrice || currentPrice;
 }
 
-async function calculateTotalPrice(items: { productId: string | Types.ObjectId; quantity: number }[]) {
+async function calculateTotalPrice(items: { product: string | Types.ObjectId; quantity: number }[]) {
   const productsService = new ProductsService();
   const { totalPrice, failedProducts } = await productsService.getProductsPrice(items);
   return { totalPrice: totalPrice || 0, failedProducts };
@@ -98,7 +98,7 @@ orderSchema.pre('save', async function (next) {
   const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, () => {
     this.voucher = null;
   });
-  if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.productId.toString));
+  if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.product.toString));
   this.totalPrice = priceAfterDiscount;
   next();
 });

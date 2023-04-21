@@ -71,6 +71,48 @@ class UsersController {
       next(error);
     }
   };
+
+  public getCartItems = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const data = await this.usersService.getCartItems(userId.toString());
+      res.status(200).json({ code: 200, success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public addCartItem = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const { product, quantity } = req.body;
+      await this.usersService.addCartItem({ userId: userId.toString(), product, quantity });
+      res.status(200).json({ code: 200, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public removeCartItem = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      const { product, quantity } = req.body;
+      await this.usersService.removeCartItem({ userId: userId.toString(), product, quantity });
+      res.status(200).json({ code: 200, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public resetCartItems = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.auth;
+      await this.usersService.resetCartItems(userId.toString());
+      res.status(200).json({ code: 200, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default UsersController;
