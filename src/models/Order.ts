@@ -93,13 +93,14 @@ async function calculateTotalPrice(items: { product: string | Types.ObjectId; qu
 }
 
 orderSchema.pre('save', async function (next) {
+  const DEFAULT_SHIPPING_FEE = 20000;
   const { totalPrice, failedProducts } = await calculateTotalPrice(this.items);
   const appliedVoucher = this.voucher?.toString();
   const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, () => {
     this.voucher = null;
   });
   if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.product.toString));
-  this.totalPrice = priceAfterDiscount;
+  this.totalPrice = totalPrice < 300000 ? priceAfterDiscount + DEFAULT_SHIPPING_FEE : priceAfterDiscount;
   next();
 });
 

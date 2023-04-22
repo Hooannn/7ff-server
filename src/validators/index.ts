@@ -7,7 +7,7 @@ export const checkoutValidator = () => [
   body('customerId').isString(),
   body('isDelivery').isBoolean(),
   body('items').isArray({ min: 1 }),
-  body('items.*.productId').isString().not().isEmpty(),
+  body('items.*.product').isString().not().isEmpty(),
   body('items.*.quantity').isInt().not().isEmpty(),
   body('deliveryPhone').optional().isMobilePhone(['vi-VN']),
   body('deliveryAddress').optional().isString(),
