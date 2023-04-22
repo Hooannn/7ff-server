@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { errorStatus } from '@/config';
+import { HttpException } from '@/exceptions/HttpException';
 import Order, { IOrder } from '@/models/Order';
+import { IUser } from '@/models/User';
 import dayjs, { Dayjs } from 'dayjs';
 import tz from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -32,11 +35,17 @@ class OrdersService {
     return await this.Order.find({ customerId: customerId });
   }
 
+  public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {
+    const order = await this.Order.findById(orderId);
+    if (order.customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
+    return order;
+  }
+
   public async getAllOrders({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
     const parseFilter = JSON.parse(filter ? filter : '{}');
     const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
     const total = await this.Order.countDocuments(parseFilter).sort(parseSort);
-    const orders = await this.Order.find(parseFilter, null, { limit, skip }).sort(parseSort).populate('items.productId voucher');
+    const orders = await this.Order.find(parseFilter, null, { limit, skip }).sort(parseSort).populate('items.product voucher');
     return { total, orders };
   }
 

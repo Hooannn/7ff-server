@@ -1,4 +1,5 @@
 import { CLIENT_URL, successStatus } from '@/config';
+import { RequestWithUser } from '@/interfaces';
 import NodemailerService from '@/services/nodemailer.service';
 import OrdersService from '@/services/orders.service';
 import UsersService from '@/services/users.service';
@@ -19,6 +20,17 @@ class OrdersController {
         sort: sort?.toString(),
       });
       res.status(200).json({ code: 200, success: true, data: orders, total, took: orders.length });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getOrderById = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { orderId } = req.params;
+      const { userId, role } = req.auth;
+      const data = await this.ordersService.getOrderById({ orderId, userId, role });
+      res.status(200).json({ code: 200, success: true, data });
     } catch (error) {
       next(error);
     }
@@ -53,7 +65,8 @@ class OrdersController {
       }
       const { customerId, isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
       const order = await this.ordersService.createOrder({ customerId, voucher, isDelivery, deliveryAddress, deliveryPhone, items, note });
-      const customerEmail = (await this.usersService.getUserById(customerId.toString()))?.email;
+      const { email: customerEmail, _id } = await this.usersService.getUserById(customerId.toString());
+      await this.usersService.resetCartItems(_id.toString());
       const mailHref = `${CLIENT_URL}/orders`;
       if (customerEmail) this.nodemailerService.sendOrderConfirmationEmail(customerEmail, order, mailHref);
       res.status(201).json({ code: 201, success: true, data: order, message: successStatus.CREATE_SUCCESSFULLY });
