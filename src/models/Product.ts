@@ -5,10 +5,20 @@ export interface IProduct {
   name: IContent;
   description: IContent;
   price: number;
-  yearlyTotalSales: number;
-  yearlyTotalSoldUnits: number;
+  yearlyData: {
+    year: string;
+    totalSales: number;
+    totalUnits: number;
+  }[];
   monthlyData: {
     month: string;
+    year: string;
+    totalSales: number;
+    totalUnits: number;
+  }[];
+  weeklyData: {
+    week: string;
+    year: string;
     totalSales: number;
     totalUnits: number;
   }[];
@@ -52,11 +62,25 @@ const productSchema = new Schema<IProduct>(
       required: false,
       default: 1000000,
     },
-    yearlyTotalSales: Number,
-    yearlyTotalSoldUnits: Number,
+    yearlyData: [
+      {
+        year: String,
+        totalSales: Number,
+        totalUnits: Number,
+      },
+    ],
     monthlyData: [
       {
         month: String,
+        year: String,
+        totalSales: Number,
+        totalUnits: Number,
+      },
+    ],
+    weeklyData: [
+      {
+        week: String,
+        year: String,
         totalSales: Number,
         totalUnits: Number,
       },
