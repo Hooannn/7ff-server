@@ -67,7 +67,7 @@ class OrdersController {
       const order = await this.ordersService.createOrder({ customerId, voucher, isDelivery, deliveryAddress, deliveryPhone, items, note });
       const { email: customerEmail, _id } = await this.usersService.getUserById(customerId.toString());
       await this.usersService.resetCartItems(_id.toString());
-      const mailHref = `${CLIENT_URL}/orders`;
+      const mailHref = `${CLIENT_URL}/profile/orders`;
       if (customerEmail) this.nodemailerService.sendOrderConfirmationEmail(customerEmail, order, mailHref);
       res.status(201).json({ code: 201, success: true, data: order, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
