@@ -28,6 +28,16 @@ class ProductsController {
     }
   };
 
+  public searchProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { q } = req.query;
+      const { products } = await this.productsService.searchProducts({ q: q.toString() });
+      res.status(200).json({ code: 200, success: true, data: products });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public addProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const reqProduct = req.body;

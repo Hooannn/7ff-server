@@ -45,6 +45,21 @@ class ProductsService {
     return { total, products };
   }
 
+  public async searchProducts({ q }: { q: string }) {
+    const parseSearchTerm = JSON.parse(q);
+    const products = await this.Product.find({
+      $or: [
+        {
+          'name.vi': parseSearchTerm,
+        },
+        {
+          'name.en': parseSearchTerm,
+        },
+      ],
+    }).sort('{ "createdAt": "-1" }');
+    return { products };
+  }
+
   public async addProduct(reqProduct: IProduct) {
     const product = new this.Product(reqProduct);
     await product.save();
