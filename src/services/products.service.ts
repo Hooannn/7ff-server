@@ -56,6 +56,7 @@ class ProductsService {
           'name.en': parseSearchTerm,
         },
       ],
+      isAvailable: true
     }).sort('{ "createdAt": "-1" }');
     return { products };
   }
