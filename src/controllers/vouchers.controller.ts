@@ -1,4 +1,5 @@
 import { successStatus } from '@/config';
+import { RequestWithUser } from '@/interfaces';
 import VouchersService from '@/services/vouchers.service';
 import { NextFunction, Request, Response } from 'express';
 class VouchersController {
@@ -20,8 +21,8 @@ class VouchersController {
 
   public addVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { code, discountAmount, discountType, expiredDate } = req.body;
-      const voucher = await this.vouchersService.addVoucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate });
+      const { code, discountAmount, discountType, expiredDate, totalUsageLimit } = req.body;
+      const voucher = await this.vouchersService.addVoucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate, totalUsageLimit });
       res.status(201).json({ code: 201, success: true, data: voucher, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
@@ -49,10 +50,11 @@ class VouchersController {
     }
   };
 
-  public checkVoucherByCode = async (req: Request, res: Response, next: NextFunction) => {
+  public checkVoucherByCode = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
+      const { userId } = req.auth;
       const code = req.query.code;
-      const voucher = await this.vouchersService.checkVoucherByCode(code.toString());
+      const voucher = await this.vouchersService.checkVoucherByCode(code.toString(), userId);
       res.status(200).json({ code: 200, success: true, data: voucher, message: successStatus.VOUCHER_FOUND });
     } catch (error) {
       next(error);

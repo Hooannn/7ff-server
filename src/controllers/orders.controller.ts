@@ -75,15 +75,24 @@ class OrdersController {
     }
   };
 
-  public checkoutThenCreateOrder = async (req: Request, res: Response, next: NextFunction) => {
+  public checkoutThenCreateOrder = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const { customerId, isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
-      const order = await this.ordersService.createOrder({ customerId, voucher, isDelivery, deliveryAddress, deliveryPhone, items, note });
-      const { email: customerEmail, _id } = await this.usersService.getUserById(customerId.toString());
+      const { userId } = req.auth;
+      const { isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
+      const order = await this.ordersService.createOrder({
+        customerId: userId as any,
+        voucher,
+        isDelivery,
+        deliveryAddress,
+        deliveryPhone,
+        items,
+        note,
+      });
+      const { email: customerEmail, _id } = await this.usersService.getUserById(userId);
       await this.usersService.resetCartItems(_id.toString());
       const mailHref = `${CLIENT_URL}/profile/orders`;
       if (customerEmail) this.nodemailerService.sendOrderConfirmationEmail(customerEmail, order, mailHref);

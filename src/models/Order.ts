@@ -1,5 +1,7 @@
+import { errorStatus } from '@/config';
 import ProductsService from '../services/products.service';
 import { Schema, model, Types } from 'mongoose';
+import { HttpException } from '@/exceptions/HttpException';
 
 export interface IOrder {
   customerId: Types.ObjectId;
@@ -52,21 +54,23 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true },
 );
 
-async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: number, voucherExpiredCallback: () => void) {
+async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: number, customerId: string) {
   const VoucherModel = model('Voucher');
   let priceAfterDiscount: number | null = null;
   if (appliedVoucher) {
-    const voucher = (await VoucherModel.findById(appliedVoucher)) as any;
-    if (!voucher) return 0;
-    if (voucher.expiredDate && voucher.expiredDate < Date.now()) {
-      voucherExpiredCallback();
-      return 0;
-    }
+    const voucher = await VoucherModel.findOne({
+      _id: appliedVoucher,
+      totalUsageLimit: { $gt: 0 },
+      usersClaimed: { $nin: customerId },
+      expiredDate: { $gt: Date.now() },
+    });
+    if (!voucher) throw new HttpException(400, errorStatus.VOUCHER_NOT_FOUND);
     if (voucher.discountType === 'percent') {
       priceAfterDiscount = totalPrice - totalPrice * voucher.discountAmount;
     } else {
       priceAfterDiscount = totalPrice - voucher.discountAmount;
     }
+    await voucher.update({ $inc: { totalUsageLimit: -1 }, $addToSet: { usersClaimed: customerId } });
   }
   return priceAfterDiscount || totalPrice;
 }
@@ -96,9 +100,7 @@ orderSchema.pre('save', async function (next) {
   const DEFAULT_SHIPPING_FEE = 20000;
   const { totalPrice, failedProducts } = await calculateTotalPrice(this.items);
   const appliedVoucher = this.voucher?.toString();
-  const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, () => {
-    this.voucher = null;
-  });
+  const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, this.customerId.toString());
   if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.product.toString));
   this.totalPrice = totalPrice < 300000 ? priceAfterDiscount + DEFAULT_SHIPPING_FEE : priceAfterDiscount;
   next();
@@ -122,9 +124,7 @@ orderSchema.pre('findOneAndUpdate', async function (next) {
     return next();
   }
   const originalPrice = await getOriginalPrice(previousVoucher, order.totalPrice);
-  const priceAfterDiscount = await getPriceAfterDiscount(modifiedVoucher, originalPrice, () => {
-    this.set('voucher', null);
-  });
+  const priceAfterDiscount = await getPriceAfterDiscount(modifiedVoucher, originalPrice, order.customerId.toString());
   this.set('totalPrice', priceAfterDiscount);
   next();
 });
