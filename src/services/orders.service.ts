@@ -31,20 +31,24 @@ interface ChartData {
 class OrdersService {
   private Order = Order;
 
-  public async getOrdersByCustomerId({
-    customerId,
-    userId,
-    role,
-    status,
-  }: {
-    customerId: string;
-    userId?: string;
-    role?: IUser['role'];
-    status?: IOrder['status'];
-  }) {
-    if (customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
-    if (status) return await this.Order.find({ customerId, status }).sort({ createdAt: -1 });
-    return await this.Order.find({ customerId }).sort({ createdAt: -1 });
+  // public async getOrdersByCustomerId({
+  //   customerId,
+  //   userId,
+  //   role,
+  //   status,
+  // }: {
+  //   customerId: string;
+  //   userId?: string;
+  //   role?: IUser['role'];
+  //   status?: IOrder['status'];
+  // }) {
+  //   if (customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
+  //   if (status) return await this.Order.find({ customerId, status }).sort({ createdAt: -1 });
+  //   return await this.Order.find({ customerId }).sort({ createdAt: -1 });
+  // }
+
+  public async getOrdersByCustomerId({ customerId }: { customerId: string }) {
+    return await this.Order.find({ customerId: customerId });
   }
 
   public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {

@@ -33,9 +33,9 @@ class OrdersController {
       const { userId, role } = req.auth;
       const orders = await this.ordersService.getOrdersByCustomerId({
         customerId: customerId.toString(),
-        userId,
-        role,
-        status: status as IOrder['status'],
+        // userId,
+        // role,
+        // status: status as IOrder['status'],
       });
       res.status(200).json({ code: 200, success: true, data: orders });
     } catch (error) {
