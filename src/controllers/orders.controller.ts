@@ -1,5 +1,6 @@
 import { CLIENT_URL, successStatus } from '@/config';
 import { RequestWithUser } from '@/interfaces';
+import { IOrder } from '@/models/Order';
 import NodemailerService from '@/services/nodemailer.service';
 import OrdersService from '@/services/orders.service';
 import UsersService from '@/services/users.service';
@@ -20,6 +21,23 @@ class OrdersController {
         sort: sort?.toString(),
       });
       res.status(200).json({ code: 200, success: true, data: orders, total, took: orders.length });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getOrdersByCustomerId = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { customerId } = req.params;
+      const { status } = req.query;
+      const { userId, role } = req.auth;
+      const orders = await this.ordersService.getOrdersByCustomerId({
+        customerId: customerId.toString(),
+        userId,
+        role,
+        status: status as IOrder['status'],
+      });
+      res.status(200).json({ code: 200, success: true, data: orders });
     } catch (error) {
       next(error);
     }
