@@ -4,7 +4,6 @@ export const emailValidator = () => body('email').isEmail();
 export const passwordValidator = () => body('password').isLength({ min: 6, max: 25 });
 
 export const checkoutValidator = () => [
-  body('customerId').isString(),
   body('isDelivery').isBoolean(),
   body('items').isArray({ min: 1 }),
   body('items.*.product').isString().not().isEmpty(),

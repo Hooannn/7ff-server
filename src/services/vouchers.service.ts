@@ -13,7 +13,7 @@ class VouchersService {
     return { total, vouchers };
   }
 
-  public async addVoucher(reqVoucher: IVoucher) {
+  public async addVoucher(reqVoucher: Partial<IVoucher>) {
     const isVoucherExisted = await this.Voucher.findOne({ code: reqVoucher.code });
     if (isVoucherExisted) throw new HttpException(400, errorStatus.BAD_REQUEST);
     const voucher = new this.Voucher(reqVoucher);
@@ -25,12 +25,17 @@ class VouchersService {
     return this.Voucher.findByIdAndDelete(voucherId);
   }
 
-  public async updateVoucher(voucherId: string, voucher: IVoucher) {
+  public async updateVoucher(voucherId: string, voucher: Partial<IVoucher>) {
     return await this.Voucher.findOneAndUpdate({ _id: voucherId }, voucher, { returnOriginal: false });
   }
 
-  public async checkVoucherByCode(code: string) {
-    const voucher = await this.Voucher.findOne({ code: code.toUpperCase() });
+  public async checkVoucherByCode(code: string, userId: string) {
+    const voucher = await this.Voucher.findOne({
+      code: code.toUpperCase(),
+      totalUsageLimit: { $gt: 0 },
+      usersClaimed: { $nin: userId },
+      expiredDate: { $gt: Date.now() },
+    });
     if (!voucher) throw new HttpException(400, errorStatus.VOUCHER_NOT_FOUND);
     return voucher;
   }
