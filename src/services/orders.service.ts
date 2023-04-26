@@ -9,7 +9,7 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(tz);
 dayjs.extend(utc);
 dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
-import { Document, Types } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 
 interface CreateChartParams {
   orders: (Document<unknown, any, IOrder> &
@@ -35,21 +35,24 @@ class OrdersService {
     customerId,
     userId,
     role,
-    status,
+    sort,
   }: {
     customerId: string;
     userId?: string;
     role?: IUser['role'];
-    status?: IOrder['status'];
+    sort?: string;
   }) {
     if (customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
-    if (status) return await this.Order.find({ customerId, status }).sort({ createdAt: -1 });
-    return await this.Order.find({ customerId }).sort({ createdAt: -1 });
+    if (sort === 'status') {
+      const orderOfStatus = ['Processing', 'Delivering', 'Done', 'Cancelled'];
+      return this.Order.aggregate([
+        { $match: { customerId: new mongoose.Types.ObjectId(customerId) } },
+        { $addFields: { __order: { $indexOfArray: [orderOfStatus, '$status'] } } },
+        { $sort: { __order: 1 } },
+      ]);
+    }
+    return await this.Order.find({ customerId }).sort(sort ? { [sort]: 1 } : { createdAt: -1 });
   }
-
-  // public async getOrdersByCustomerId(customerId: string) {
-  //   return await this.Order.find({ customerId: customerId });
-  // }
 
   public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {
     const order = await this.Order.findById(orderId);
