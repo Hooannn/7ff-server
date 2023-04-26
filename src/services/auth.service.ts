@@ -80,7 +80,8 @@ class AuthService {
     if (!target) throw new HttpException(400, errorStatus.USER_NOT_FOUND);
     const isPasswordMatched = compareSync(password, target.password.toString());
     if (!isPasswordMatched) throw new HttpException(400, errorStatus.WRONG_PASSWORD);
-    const orders = await this.ordersService.getOrdersByCustomerId({ customerId: userId });
+    const orders = await this.ordersService.getOrdersByCustomerId(userId);
+    // const orders = await this.ordersService.getOrdersByCustomerId({ customerId: userId });
     orders.forEach(async order => {
       if (order.status !== 'Done') {
         await order.update({ status: 'Cancelled' });

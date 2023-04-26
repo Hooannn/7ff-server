@@ -47,7 +47,7 @@ class OrdersService {
   //   return await this.Order.find({ customerId }).sort({ createdAt: -1 });
   // }
 
-  public async getOrdersByCustomerId({ customerId }: { customerId: string }) {
+  public async getOrdersByCustomerId(customerId: string) {
     return await this.Order.find({ customerId: customerId });
   }
 
