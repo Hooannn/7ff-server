@@ -47,6 +47,10 @@ class OrdersService {
     return await this.Order.find({ customerId }).sort({ createdAt: -1 });
   }
 
+  // public async getOrdersByCustomerId(customerId: string) {
+  //   return await this.Order.find({ customerId: customerId });
+  // }
+
   public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {
     const order = await this.Order.findById(orderId);
     if (order.customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
