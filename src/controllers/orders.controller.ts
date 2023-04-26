@@ -26,22 +26,22 @@ class OrdersController {
     }
   };
 
-  // public getOrdersByCustomerId = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-  //   try {
-  //     const { customerId } = req.params;
-  //     const { status } = req.query;
-  //     const { userId, role } = req.auth;
-  //     const orders = await this.ordersService.getOrdersByCustomerId({
-  //       customerId: customerId.toString(),
-  //       userId,
-  //       role,
-  //       status: status as IOrder['status'],
-  //     });
-  //     res.status(200).json({ code: 200, success: true, data: orders });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  public getOrdersByCustomerId = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { customerId } = req.params;
+      const { status } = req.query;
+      const { userId, role } = req.auth;
+      const orders = await this.ordersService.getOrdersByCustomerId({
+        customerId: customerId.toString(),
+        userId,
+        role,
+        status: status as IOrder['status'],
+      });
+      res.status(200).json({ code: 200, success: true, data: orders });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   public getOrderById = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
