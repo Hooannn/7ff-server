@@ -1,9 +1,12 @@
 import { errorStatus, SALTED_PASSWORD } from '@/config';
 import { HttpException } from '@/exceptions/HttpException';
+import Order from '@/models/Order';
 import User, { IUser } from '@/models/User';
+import { getStartOfTimeframe, getNow, getPreviousTimeframe, getEndOfTimeframe } from '@/utils/time';
 import { compareSync, hashSync } from 'bcrypt';
 class UsersService {
   private User = User;
+  private Order = Order;
 
   public async getAllUsers({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
     const parseFilter = JSON.parse(filter ? filter : '{}');
@@ -51,13 +54,14 @@ class UsersService {
     return await this.User.findOneAndUpdate({ _id: userId }, { password: hashedPassword }, { returnOriginal: false });
   }
 
-  public async getSummaryUsers(from: number, to: number) {
-    const range = to - from;
+  public async getSummaryUsers(to: number, type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type).valueOf();
     const currentCount = await this.User.countDocuments({
-      createdAt: { $gte: from, $lte: to },
+      createdAt: { $gte: startDate, $lte: to },
     });
+    const previousTimeFrame = getPreviousTimeframe(to, type).valueOf();
     const previousCount = await this.User.countDocuments({
-      createdAt: { $gte: from - range, $lte: from },
+      createdAt: { $gte: getStartOfTimeframe(previousTimeFrame, type).valueOf(), $lte: getEndOfTimeframe(previousTimeFrame, type).valueOf() },
     });
     return { currentCount, previousCount };
   }
@@ -86,6 +90,39 @@ class UsersService {
 
   public async resetCartItems(userId: string) {
     return await this.User.findByIdAndUpdate(userId, { cartItems: [] });
+  }
+
+  public async getNewestUsers(type: 'daily' | 'weekly' | 'monthly' | 'yearly', limit = 5) {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type);
+    return await User.find({ createdAt: { $gte: startDate } })
+      .sort({ createdAt: -1 })
+      .limit(limit);
+  }
+
+  public async getUsersWithHighestTotalOrderValue(type: 'daily' | 'weekly' | 'monthly' | 'yearly', limit = 5) {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type);
+    const ordersInTimeRange = await this.Order.find({ createdAt: { $gte: startDate } }).select('customerId totalPrice');
+
+    const totalOrderValueByUser = ordersInTimeRange.reduce((result, order) => {
+      const userId = order.customerId.toString();
+      if (!result[userId]) {
+        result[userId] = {
+          user: order.customerId,
+          totalOrderValue: 0,
+        };
+      }
+      result[userId].totalOrderValue += order.totalPrice;
+      return result;
+    }, {});
+
+    const sortedUsers = Object.values(totalOrderValueByUser)
+      .sort((a: any, b: any) => b.totalOrderValue - a.totalOrderValue)
+      .slice(0, limit);
+    const users = await this.User.find({ _id: sortedUsers.map((sortedUser: any) => sortedUser.user) });
+    return users.map((user: any) => ({
+      ...user._doc,
+      totalOrderValue: (sortedUsers.find((sortedUser: any) => sortedUser.user.toString() === user._doc._id.toString()) as any)?.totalOrderValue,
+    }));
   }
 }
 

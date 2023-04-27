@@ -1,6 +1,5 @@
 import { CLIENT_URL, successStatus } from '@/config';
 import { RequestWithUser } from '@/interfaces';
-import { IOrder } from '@/models/Order';
 import NodemailerService from '@/services/nodemailer.service';
 import OrdersService from '@/services/orders.service';
 import UsersService from '@/services/users.service';

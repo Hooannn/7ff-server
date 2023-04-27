@@ -14,6 +14,9 @@ class StatisticsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, adminMiddleware, this.statisticsController.getStatistics);
+    this.router.get(`${this.path}/popular-products`, adminMiddleware, this.statisticsController.getPopularProducts);
+    this.router.get(`${this.path}/charts/revenues`, adminMiddleware, this.statisticsController.getRevenuesChart);
+    this.router.get(`${this.path}/popular-users`, adminMiddleware, this.statisticsController.getPopularUsers);
   }
 }
 
