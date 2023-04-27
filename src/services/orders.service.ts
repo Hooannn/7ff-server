@@ -3,14 +3,9 @@ import { errorStatus } from '@/config';
 import { HttpException } from '@/exceptions/HttpException';
 import Order, { IOrder } from '@/models/Order';
 import { IUser } from '@/models/User';
-import dayjs, { Dayjs } from 'dayjs';
-import tz from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-dayjs.extend(tz);
-dayjs.extend(utc);
-dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
+import { isSame, getNow, getPreviousTimeframe, getStartOfTimeframe, getEndOfTimeframe } from '@/utils/time';
 import mongoose, { Document, Types } from 'mongoose';
-
+import type { Dayjs } from 'dayjs';
 interface CreateChartParams {
   orders: (Document<unknown, any, IOrder> &
     Omit<
@@ -19,14 +14,17 @@ interface CreateChartParams {
       },
       never
     >)[];
-  to: number;
-  from: number;
+  startDate: Dayjs;
+  columns: number;
+  timeUnit: string;
+  format: string;
 }
 
 interface ChartData {
   date: Dayjs;
   name: string;
-  value: number;
+  totalSales: number;
+  totalUnits: number;
 }
 class OrdersService {
   private Order = Order;
@@ -82,109 +80,87 @@ class OrdersService {
     return await this.Order.findOneAndUpdate({ _id: orderId }, order, { returnOriginal: false });
   }
 
-  public async getSummaryOrders(from: number, to: number) {
-    const range = to - from;
+  public async getSummaryOrders(to: number, type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type).valueOf();
     const currentCount = await this.Order.countDocuments({
-      createdAt: { $gte: from, $lte: to },
+      createdAt: { $gte: startDate, $lte: to },
     });
+    const previousTimeFrame = getPreviousTimeframe(to, type).valueOf();
     const previousCount = await this.Order.countDocuments({
-      createdAt: { $gte: from - range, $lte: from },
+      createdAt: { $gte: getStartOfTimeframe(previousTimeFrame, type).valueOf(), $lte: getEndOfTimeframe(previousTimeFrame, type).valueOf() },
     });
     return { currentCount, previousCount };
   }
 
-  public async getSummaryRevenues(from: number, to: number) {
-    const DAY_TS = 86400000;
-    const WEEK_TS = 604800000;
-    const MONTH_TS = 2629743000;
-    const YEAR_TS = 31556926000;
-    const range = to - from;
+  public async getSummaryRevenues(to: number, type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type);
     const currentOrders = await this.Order.find({
-      createdAt: { $gte: from, $lte: to },
+      createdAt: { $gte: startDate.valueOf(), $lte: to },
       status: 'Done',
     });
+    const previousTimeFrame = getPreviousTimeframe(to, type).valueOf();
     const previousOrders = await this.Order.find({
-      createdAt: { $gte: from - range, $lte: from },
+      createdAt: { $gte: getStartOfTimeframe(previousTimeFrame, type).valueOf(), $lte: getEndOfTimeframe(previousTimeFrame, type).valueOf() },
       status: 'Done',
     });
     const currentCount = currentOrders.reduce((partialSum, order) => partialSum + order.totalPrice, 0);
     const previousCount = previousOrders.reduce((partialSum, order) => partialSum + order.totalPrice, 0);
-    const createChartHandlers = [
-      {
-        condition: DAY_TS,
-        execute: this.createDailyRevenuesChart,
-      },
-      {
-        condition: WEEK_TS,
-        execute: this.createWeeklyRevenuesChart,
-      },
-      {
-        condition: MONTH_TS,
-        execute: this.createMonthlyRevenuesChart,
-      },
-      {
-        condition: YEAR_TS,
-        execute: this.createYearlyRevenuesChart,
-      },
-    ];
-
-    const createChartHandler = createChartHandlers.find(handler => range <= handler.condition);
-    const details = await createChartHandler.execute({ orders: currentOrders, to, from });
-    return { currentCount, previousCount, details };
+    // const { columns, timeUnit, format } = this.prepareCreateChartParams(type, startDate);
+    // const details = await this.createRevenuesChart({ orders: currentOrders, startDate, columns, timeUnit, format });
+    return { currentCount, previousCount /*, details  */ };
   }
 
-  private async createDailyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs.tz(from).startOf('day');
-    const results: ChartData[] = Array.from(Array(24), (_, i) => ({
-      date: startDate.add(i, 'hour'),
-      name: startDate.add(i, 'hour').format('hh:mm'),
-      value: 0,
-    }));
-    orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'hour'));
-      results[index].value = results[index].value + totalPrice;
+  public async getRevenuesChart(type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const startDate = getStartOfTimeframe(getNow().valueOf(), type);
+    const currentOrders = await this.Order.find({
+      createdAt: { $gte: startDate.valueOf(), $lte: getNow().valueOf() },
+      status: 'Done',
     });
-    return results;
+    const { columns, timeUnit, format } = this.prepareCreateChartParams(type, startDate);
+    return await this.createRevenuesChart({ orders: currentOrders, startDate, columns, timeUnit, format });
   }
 
-  private async createWeeklyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs.tz(from).startOf('day');
-    const results: ChartData[] = Array.from(Array(7), (_, i) => ({
-      date: startDate.add(i, 'day'),
-      name: startDate.add(i, 'day').format('dddd DD-MM'),
-      value: 0,
-    }));
-    orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'day'));
-      results[index].value = results[index].value + totalPrice;
-    });
-    return results;
+  private prepareCreateChartParams(type: 'daily' | 'weekly' | 'monthly' | 'yearly', startDate: Dayjs) {
+    switch (type) {
+      case 'daily':
+        return {
+          columns: 24,
+          timeUnit: 'hour',
+          format: 'hh:mm',
+        };
+      case 'weekly':
+        return {
+          columns: 7,
+          timeUnit: 'day',
+          format: 'dddd DD-MM',
+        };
+      case 'monthly':
+        return {
+          columns: startDate.daysInMonth(),
+          timeUnit: 'day',
+          format: 'dddd DD-MM',
+        };
+      case 'yearly':
+        return {
+          columns: 12,
+          timeUnit: 'month',
+          format: 'MMMM',
+        };
+    }
   }
 
-  private async createMonthlyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs.tz(from).startOf('day');
-    const results: ChartData[] = Array.from(Array(startDate.daysInMonth()), (_, i) => ({
-      date: startDate.add(i, 'day'),
-      name: startDate.add(i, 'day').format('dddd DD-MM'),
-      value: 0,
+  private async createRevenuesChart({ orders, startDate, columns, timeUnit, format }: CreateChartParams) {
+    const results: ChartData[] = Array.from(Array(columns), (_, i) => ({
+      date: startDate.add(i, timeUnit as any),
+      name: startDate.add(i, timeUnit as any).format(format),
+      totalSales: 0,
+      totalUnits: 0,
     }));
-    orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'day'));
-      results[index].value = results[index].value + totalPrice;
-    });
-    return results;
-  }
-
-  private async createYearlyRevenuesChart({ orders, to, from }: CreateChartParams) {
-    const startDate = dayjs.tz(from).startOf('day');
-    const results: ChartData[] = Array.from(Array(12), (_, i) => ({
-      date: startDate.add(i, 'month'),
-      name: startDate.add(i, 'month').format('MMMM'),
-      value: 0,
-    }));
-    orders.forEach(({ totalPrice, createdAt }: any) => {
-      const index = results.findIndex(result => dayjs.tz(createdAt).isSame(dayjs.tz(result.date), 'month'));
-      results[index].value = results[index].value + totalPrice;
+    orders.forEach(({ totalPrice, createdAt, items }: any) => {
+      const index = results.findIndex(result => isSame(createdAt, result.date, timeUnit));
+      const totalUnits = items.reduce((partialSum: any, item: any) => partialSum + item.quantity, 0);
+      results[index].totalSales = results[index].totalSales + totalPrice;
+      results[index].totalUnits = results[index].totalUnits + totalUnits;
     });
     return results;
   }

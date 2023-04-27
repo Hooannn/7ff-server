@@ -9,7 +9,6 @@ export interface IUser {
   phoneNumber?: string;
   refreshToken?: string;
   avatar?: string;
-  orders?: Types.ObjectId[];
   cartItems?: {
     product: Types.ObjectId;
     quantity: number;
@@ -49,12 +48,6 @@ const userSchema = new Schema<IUser>(
     avatar: {
       type: String,
     },
-    orders: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Order',
-      },
-    ],
     cartItems: [
       {
         product: {

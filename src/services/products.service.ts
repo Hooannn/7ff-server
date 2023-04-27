@@ -1,5 +1,6 @@
 import Product, { IProduct } from '../models/Product';
 import { Document, Types, mongo } from 'mongoose';
+import { isSameTimeframe, getNow } from '@/utils/time';
 interface UpdateParams {
   product: Document<unknown, any, IProduct> &
     Omit<
@@ -13,7 +14,21 @@ interface UpdateParams {
 class ProductsService {
   private Product = Product;
   public async getProductById(productId: string) {
-    return await this.Product.findById(productId).populate('category');
+    const product = await this.Product.findById(productId).populate('category');
+    this.updateViewCount(product, 'daily');
+    this.updateViewCount(product, 'monthly');
+    this.updateViewCount(product, 'weekly');
+    this.updateViewCount(product, 'yearly');
+    return product;
+  }
+
+  public async getPopularProducts(type: 'daily' | 'weekly' | 'monthly' | 'yearly', limit = 5) {
+    const [highestViewCountProducts, highestTotalSoldUnitsProducts, highestTotalSalesProducts] = await Promise.all([
+      await this.getHighestViewCountProducts(type, limit),
+      await this.getHighestTotalSoldProducts(type, 'totalUnits', limit),
+      await this.getHighestTotalSoldProducts(type, 'totalSales', limit),
+    ]);
+    return { highestViewCountProducts, highestTotalSoldUnitsProducts, highestTotalSalesProducts };
   }
 
   public async getProductsPrice(items: { product: string | Types.ObjectId; quantity: number }[]) {
@@ -30,6 +45,7 @@ class ProductsService {
           await this.updateYearlySales({ product: products[index], itemQuantity }),
           await this.updateWeeklySales({ product: products[index], itemQuantity }),
           await this.updateMonthlySales({ product: products[index], itemQuantity }),
+          await this.updateDailySales({ product: products[index], itemQuantity }),
         ]);
         products[index].save();
       } else failedProducts.push(products[index]._id.toString());
@@ -106,6 +122,29 @@ class ProductsService {
     }
   }
 
+  private async updateDailySales({ product, itemQuantity }: UpdateParams) {
+    const now = getNow();
+    const dailyData = product.dailyData;
+
+    if (dailyData && isSameTimeframe(now, dailyData.time, 'daily')) {
+      await product.updateOne({
+        $inc: {
+          'dailyData.totalSales': product.price * itemQuantity,
+          'dailyData.totalUnits': itemQuantity,
+        },
+      });
+    } else {
+      const newDailyData = {
+        time: now.startOf('day').valueOf(),
+        totalSales: product.price * itemQuantity,
+        totalUnits: itemQuantity,
+      };
+      await product.updateOne({
+        $set: { dailyData: newDailyData },
+      });
+    }
+  }
+
   private async updateWeeklySales({ product, itemQuantity }: UpdateParams) {
     const year = new Date().getFullYear().toString();
     const week = `${this.getWeekNumber(new Date())}`;
@@ -128,6 +167,74 @@ class ProductsService {
     const dayOfYear = ((today.getTime() - onejan.getTime() + 86400000) / 86400000) >> 0;
     return Math.ceil(dayOfYear / 7);
   };
+
+  private async getHighestViewCountProducts(type: 'daily' | 'weekly' | 'monthly' | 'yearly', limit: number) {
+    const viewCountField = `${type}ViewCount.count`;
+    return await this.Product.find({ [viewCountField]: { $gt: 0 } })
+      .limit(limit)
+      .sort({ [viewCountField]: -1 })
+      .populate('category');
+  }
+
+  private async getHighestTotalSoldProducts(type: 'daily' | 'weekly' | 'monthly' | 'yearly', field: 'totalSales' | 'totalUnits', limit: number) {
+    const now = getNow();
+    const year = new Date().getFullYear().toString();
+    const month = new Date().getMonth() + 1;
+    const week = `${this.getWeekNumber(new Date())}`;
+    switch (type) {
+      case 'yearly':
+        return await this.Product.find({
+          'yearlyData.year': year,
+        })
+          .sort({ [`yearlyData.${field}`]: -1 })
+          .limit(limit)
+          .populate('category');
+      case 'weekly':
+        return await this.Product.find({
+          'weeklyData.year': year,
+          'weeklyData.week': week,
+        })
+          .sort({ [`weeklyData.${field}`]: -1 })
+          .limit(limit)
+          .populate('category');
+      case 'monthly':
+        return await this.Product.find({
+          'monthlyData.year': year,
+          'monthlyData.month': month,
+        })
+          .sort({ [`monthlyData.${field}`]: -1 })
+          .limit(limit)
+          .populate('category');
+      case 'daily':
+        return await this.Product.find({
+          'dailyData.time': now.startOf('day').valueOf(),
+        })
+          .sort({ [`dailyData.${field}`]: -1 })
+          .limit(limit)
+          .populate('category');
+    }
+  }
+
+  private async updateViewCount(product: UpdateParams['product'], type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const now = getNow();
+    const viewCountField = `${type}ViewCount`;
+    const viewCount = product[viewCountField];
+    if (viewCount && isSameTimeframe(now, viewCount.time, type)) {
+      await product.updateOne({
+        $inc: {
+          [`${viewCountField}.count`]: 1,
+        },
+      });
+    } else {
+      const newViewCount = {
+        time: now.startOf('day').valueOf(),
+        count: 1,
+      };
+      await product.updateOne({
+        $set: { [viewCountField]: newViewCount },
+      });
+    }
+  }
 }
 
 export default ProductsService;
