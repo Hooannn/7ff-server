@@ -31,12 +31,6 @@ const deactiveUserSchema = new Schema<IUser>(
     avatar: {
       type: String,
     },
-    orders: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Order',
-      },
-    ],
     cartItems: [
       {
         productId: {
