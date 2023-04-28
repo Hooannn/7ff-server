@@ -9,7 +9,7 @@ class ReservationService {
 
   public async getAllReservations({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
     const parseFilter = JSON.parse(filter ? filter : '{}');
-    const parseSort = JSON.parse(sort ? sort : '{ "createdAt": "-1" }');
+    const parseSort = JSON.parse(sort ? sort : '{ "bookingTime": "-1" }');
     const total = await this.Reservation.countDocuments(parseFilter).sort(parseSort);
     const reservations = await this.Reservation.find(parseFilter, null, { limit, skip }).sort(parseSort);
     return { total, reservations };
@@ -19,8 +19,8 @@ class ReservationService {
     return this.Reservation.findByIdAndDelete(reservationId);
   }
 
-  public async updateReservation(reservationId: string, product: IReservation) {
-    return await this.Reservation.findOneAndUpdate({ _id: reservationId }, product, { returnOriginal: false });
+  public async updateReservation(reservationId: string, reservation: IReservation) {
+    return await this.Reservation.findOneAndUpdate({ _id: reservationId }, reservation, { returnOriginal: false });
   }
 }
 
