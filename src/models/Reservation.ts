@@ -12,6 +12,7 @@ export interface IReservation {
   attrs: {
     [key: string]: number | string;
   };
+  status: 'Processing' | 'Done';
 }
 
 const reservationSchema = new Schema<IReservation>(
@@ -50,6 +51,11 @@ const reservationSchema = new Schema<IReservation>(
     attrs: {
       type: Schema.Types.Mixed,
       required: false,
+    },
+    status: {
+      type: String,
+      enum: ['Processing', 'Done'],
+      default: 'Processing',
     },
   },
   { timestamps: true },

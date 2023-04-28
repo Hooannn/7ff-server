@@ -34,7 +34,7 @@ class ReservationController {
   public updateReservation = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.query;
-      const { customerId, contacts, note, underName, bookingTime, reservationFor, attrs } = req.body;
+      const { customerId, contacts, note, underName, bookingTime, reservationFor, attrs, status } = req.body;
       const results = await this.reservationService.updateReservation(id.toString(), {
         reservationFor,
         customerId,
@@ -43,6 +43,7 @@ class ReservationController {
         underName,
         bookingTime,
         attrs,
+        status,
       });
       res.status(200).json({ code: 200, success: true, data: results, message: successStatus.UPDATE_SUCCESSFULLY });
     } catch (error) {
