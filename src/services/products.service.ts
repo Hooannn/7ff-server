@@ -1,6 +1,6 @@
 import Product, { IProduct } from '../models/Product';
 import { Document, Types, mongo } from 'mongoose';
-import { isSameTimeframe, getNow } from '@/utils/time';
+import { isSameTimeframe, getNow, getTime } from '@/utils/time';
 interface UpdateParams {
   product: Document<unknown, any, IProduct> &
     Omit<
@@ -10,6 +10,7 @@ interface UpdateParams {
       never
     >;
   itemQuantity: number;
+  time?: string | number | Date;
 }
 class ProductsService {
   private Product = Product;
@@ -40,17 +41,39 @@ class ProductsService {
       const itemQuantity = items.find(item => item.product.toString() === products[index]._id.toString()).quantity;
       if (itemQuantity <= products[index].stocks) {
         totalPrice += products[index].price * itemQuantity;
-        await Promise.all([
-          await products[index].updateOne({ $inc: { stocks: -itemQuantity } }),
-          await this.updateYearlySales({ product: products[index], itemQuantity }),
-          await this.updateWeeklySales({ product: products[index], itemQuantity }),
-          await this.updateMonthlySales({ product: products[index], itemQuantity }),
-          await this.updateDailySales({ product: products[index], itemQuantity }),
-        ]);
+        await products[index].updateOne({ $inc: { stocks: -itemQuantity } });
         products[index].save();
       } else failedProducts.push(products[index]._id.toString());
     }
     return { totalPrice, failedProducts };
+  }
+
+  public async updateProductSales(items: { product: string | Types.ObjectId; quantity: number }[]) {
+    const productIds = items.map(item => new mongo.ObjectId(item.product));
+    const products = await this.Product.find({ _id: { $in: productIds } });
+    for (let index = 0; index < products.length; index++) {
+      const itemQuantity = items.find(item => item.product.toString() === products[index]._id.toString()).quantity;
+      await Promise.all([
+        await this.updateYearlySales({ product: products[index], itemQuantity }),
+        await this.updateWeeklySales({ product: products[index], itemQuantity }),
+        await this.updateMonthlySales({ product: products[index], itemQuantity }),
+        await this.updateDailySales({ product: products[index], itemQuantity }),
+      ]);
+    }
+  }
+
+  public async revertProductSales(items: { product: string | Types.ObjectId; quantity: number }[], orderCreatedAt?: number | string | Date) {
+    const productIds = items.map(item => new mongo.ObjectId(item.product));
+    const products = await this.Product.find({ _id: { $in: productIds } });
+    for (let index = 0; index < products.length; index++) {
+      const itemQuantity = items.find(item => item.product.toString() === products[index]._id.toString()).quantity;
+      await Promise.all([
+        await this.updateYearlySales({ product: products[index], itemQuantity: -itemQuantity, time: orderCreatedAt }),
+        await this.updateWeeklySales({ product: products[index], itemQuantity: -itemQuantity, time: orderCreatedAt }),
+        await this.updateMonthlySales({ product: products[index], itemQuantity: -itemQuantity, time: orderCreatedAt }),
+        await this.updateDailySales({ product: products[index], itemQuantity: -itemQuantity, time: orderCreatedAt }),
+      ]);
+    }
   }
 
   public async getAllProducts({ skip, limit, filter, sort }: { skip?: number; limit?: number; filter?: string; sort?: string }) {
@@ -91,8 +114,9 @@ class ProductsService {
     return await this.Product.findOneAndUpdate({ _id: productId }, product, { returnOriginal: false });
   }
 
-  private async updateYearlySales({ product, itemQuantity }: UpdateParams) {
-    const year = new Date().getFullYear().toString();
+  private async updateYearlySales({ product, itemQuantity, time }: UpdateParams) {
+    const date = time ? new Date(time) : new Date();
+    const year = date.getFullYear().toString();
     const yearlyDataIndex = product.yearlyData.findIndex(data => data.year === year);
     if (yearlyDataIndex !== -1) {
       await product.updateOne(
@@ -106,9 +130,10 @@ class ProductsService {
     }
   }
 
-  private async updateMonthlySales({ product, itemQuantity }: UpdateParams) {
-    const year = new Date().getFullYear().toString();
-    const month = new Date().getMonth() + 1;
+  private async updateMonthlySales({ product, itemQuantity, time }: UpdateParams) {
+    const date = time ? new Date(time) : new Date();
+    const year = date.getFullYear().toString();
+    const month = date.getMonth() + 1;
     const monthlyDataIndex = product.monthlyData.findIndex(data => data.year === year && data.month === month.toString());
     if (monthlyDataIndex !== -1) {
       await product.updateOne(
@@ -122,8 +147,8 @@ class ProductsService {
     }
   }
 
-  private async updateDailySales({ product, itemQuantity }: UpdateParams) {
-    const now = getNow();
+  private async updateDailySales({ product, itemQuantity, time }: UpdateParams) {
+    const now = time ? getTime(time) : getNow();
     const dailyData = product.dailyData;
 
     if (dailyData && isSameTimeframe(now, dailyData.time, 'daily')) {
@@ -145,9 +170,10 @@ class ProductsService {
     }
   }
 
-  private async updateWeeklySales({ product, itemQuantity }: UpdateParams) {
-    const year = new Date().getFullYear().toString();
-    const week = `${this.getWeekNumber(new Date())}`;
+  private async updateWeeklySales({ product, itemQuantity, time }: UpdateParams) {
+    const date = time ? new Date(time) : new Date();
+    const year = date.getFullYear().toString();
+    const week = `${this.getWeekNumber(date)}`;
     const weeklyDataIndex = product.weeklyData.findIndex(data => data.year === year && data.week === week);
     if (weeklyDataIndex !== -1) {
       await product.updateOne(
@@ -185,6 +211,7 @@ class ProductsService {
       case 'yearly':
         return await this.Product.find({
           'yearlyData.year': year,
+          [`yearlyData.${field}`]: { $gt: 0 },
         })
           .sort({ [`yearlyData.${field}`]: -1 })
           .limit(limit)
@@ -193,6 +220,7 @@ class ProductsService {
         return await this.Product.find({
           'weeklyData.year': year,
           'weeklyData.week': week,
+          [`weeklyData.${field}`]: { $gt: 0 },
         })
           .sort({ [`weeklyData.${field}`]: -1 })
           .limit(limit)
@@ -201,6 +229,7 @@ class ProductsService {
         return await this.Product.find({
           'monthlyData.year': year,
           'monthlyData.month': month,
+          [`monthlyData.${field}`]: { $gt: 0 },
         })
           .sort({ [`monthlyData.${field}`]: -1 })
           .limit(limit)
@@ -208,6 +237,7 @@ class ProductsService {
       case 'daily':
         return await this.Product.find({
           'dailyData.time': now.startOf('day').valueOf(),
+          [`dailyData.${field}`]: { $gt: 0 },
         })
           .sort({ [`dailyData.${field}`]: -1 })
           .limit(limit)

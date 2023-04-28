@@ -75,21 +75,6 @@ async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: 
   return priceAfterDiscount || totalPrice;
 }
 
-async function getOriginalPrice(appliedVoucher: string | null, currentPrice: number) {
-  const VoucherModel = model('Voucher');
-  let originalPrice: number | null = null;
-  if (appliedVoucher) {
-    const voucher = (await VoucherModel.findById(appliedVoucher)) as any;
-    if (!voucher) return 0;
-    if (voucher.discountType === 'percent') {
-      originalPrice = currentPrice / (1 - voucher.discountAmount);
-    } else {
-      originalPrice = currentPrice + voucher.discountAmount;
-    }
-  }
-  return originalPrice || currentPrice;
-}
-
 async function calculateTotalPrice(items: { product: string | Types.ObjectId; quantity: number }[]) {
   const productsService = new ProductsService();
   const { totalPrice, failedProducts } = await productsService.getProductsPrice(items);
@@ -106,27 +91,26 @@ orderSchema.pre('save', async function (next) {
   next();
 });
 
-// USECASE: Admin update order items or voucher -> calculate totalPrice again
-// TODO: Handle update order items case
 orderSchema.pre('findOneAndUpdate', async function (next) {
-  const modifiedVoucher = (this.getUpdate() as any).voucher;
+  const productsService = new ProductsService();
+  const modifiedStatus = (this.getUpdate() as any).status;
   const order = await this.model.findOne(this.getQuery());
-  if ((modifiedVoucher === null || modifiedVoucher === '') && order.voucher) {
-    const originalPrice = await getOriginalPrice(order.voucher.toString(), order.totalPrice);
-    this.set('totalPrice', originalPrice);
-    return next();
+  const { items } = order;
+  if (order.status === modifiedStatus) return next();
+  if (modifiedStatus === 'Done') {
+    productsService.updateProductSales(items);
   }
-  if (!modifiedVoucher) {
-    return next();
+  if (order.status === 'Done') {
+    productsService.revertProductSales(items, order.createdAt);
   }
-  const previousVoucher = order.voucher?.toString();
-  if (previousVoucher == modifiedVoucher.toString()) {
-    return next();
-  }
-  const originalPrice = await getOriginalPrice(previousVoucher, order.totalPrice);
-  const priceAfterDiscount = await getPriceAfterDiscount(modifiedVoucher, originalPrice, order.customerId.toString());
-  this.set('totalPrice', priceAfterDiscount);
   next();
 });
 
+orderSchema.pre('findOneAndDelete', async function (next) {
+  const productsService = new ProductsService();
+  const order = await this.model.findOne(this.getQuery());
+  const { items } = order;
+  productsService.revertProductSales(items, order.createdAt);
+  next();
+});
 export default model('Order', orderSchema);

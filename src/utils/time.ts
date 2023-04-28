@@ -72,6 +72,11 @@ export function getPreviousTimeframe(timestamp: number, type: 'daily' | 'weekly'
 export function getNow() {
   return dayjs.tz(Date.now());
 }
+
+export function getTime(time: number | string | Date) {
+  return dayjs.tz(new Date(time));
+}
+
 export function isSame(time: string | number | dayjs.Dayjs, compareTarget: string | number | dayjs.Dayjs, compareUnit: string) {
   return dayjs.tz(time).isSame(dayjs.tz(compareTarget), compareUnit as any);
 }
