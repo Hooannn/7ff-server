@@ -102,7 +102,7 @@ orderSchema.pre('save', async function (next) {
   const appliedVoucher = this.voucher?.toString();
   const priceAfterDiscount = await getPriceAfterDiscount(appliedVoucher, totalPrice, this.customerId.toString());
   if (failedProducts.length) this.items = this.items.filter(item => failedProducts.includes(item.product.toString));
-  this.totalPrice = totalPrice < 300000 ? priceAfterDiscount + DEFAULT_SHIPPING_FEE : priceAfterDiscount;
+  this.totalPrice = totalPrice < 300000 && this.isDelivery ? priceAfterDiscount + DEFAULT_SHIPPING_FEE : priceAfterDiscount;
   next();
 });
 
