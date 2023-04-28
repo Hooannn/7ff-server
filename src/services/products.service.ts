@@ -48,16 +48,16 @@ class ProductsService {
     return { totalPrice, failedProducts };
   }
 
-  public async updateProductSales(items: { product: string | Types.ObjectId; quantity: number }[]) {
+  public async updateProductSales(items: { product: string | Types.ObjectId; quantity: number }[], orderCreatedAt?: number | string | Date) {
     const productIds = items.map(item => new mongo.ObjectId(item.product));
     const products = await this.Product.find({ _id: { $in: productIds } });
     for (let index = 0; index < products.length; index++) {
       const itemQuantity = items.find(item => item.product.toString() === products[index]._id.toString()).quantity;
       await Promise.all([
-        await this.updateYearlySales({ product: products[index], itemQuantity }),
-        await this.updateWeeklySales({ product: products[index], itemQuantity }),
-        await this.updateMonthlySales({ product: products[index], itemQuantity }),
-        await this.updateDailySales({ product: products[index], itemQuantity }),
+        await this.updateYearlySales({ product: products[index], itemQuantity, time: orderCreatedAt }),
+        await this.updateWeeklySales({ product: products[index], itemQuantity, time: orderCreatedAt }),
+        await this.updateMonthlySales({ product: products[index], itemQuantity, time: orderCreatedAt }),
+        await this.updateDailySales({ product: products[index], itemQuantity, time: orderCreatedAt }),
       ]);
     }
   }

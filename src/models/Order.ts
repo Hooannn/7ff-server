@@ -98,7 +98,7 @@ orderSchema.pre('findOneAndUpdate', async function (next) {
   const { items } = order;
   if (order.status === modifiedStatus) return next();
   if (modifiedStatus === 'Done') {
-    productsService.updateProductSales(items);
+    productsService.updateProductSales(items, order.createdAt);
   }
   if (order.status === 'Done') {
     productsService.revertProductSales(items, order.createdAt);
