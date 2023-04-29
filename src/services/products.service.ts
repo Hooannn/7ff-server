@@ -14,6 +14,26 @@ interface UpdateParams {
 }
 class ProductsService {
   private Product = Product;
+
+  public async resetProductsDailyData() {
+    const productsToReset = await this.Product.find({
+      $or: [
+        { 'dailyViewCount.count': { $gt: 0 } },
+        { 'weeklyViewCount.count': { $gt: 0 } },
+        { 'monthlyViewCount.count': { $gt: 0 } },
+        { 'yearlyViewCount.count': { $gt: 0 } },
+      ],
+    });
+    for (const product of productsToReset) {
+      await Promise.all([
+        await this.resetViewCount(product, 'daily'),
+        await this.resetViewCount(product, 'weekly'),
+        await this.resetViewCount(product, 'monthly'),
+        await this.resetViewCount(product, 'yearly'),
+      ]);
+    }
+  }
+
   public async getProductById(productId: string) {
     const product = await this.Product.findById(productId).populate('category');
     this.updateViewCount(product, 'daily');
@@ -264,6 +284,20 @@ class ProductsService {
         $set: { [viewCountField]: newViewCount },
       });
     }
+  }
+
+  private async resetViewCount(product: UpdateParams['product'], type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
+    const now = getNow();
+    const viewCountField = `${type}ViewCount`;
+    const viewCount = product[viewCountField];
+    if (viewCount && isSameTimeframe(now, viewCount.time, type)) return;
+    const newViewCount = {
+      time: now.startOf('day').valueOf(),
+      count: 0,
+    };
+    await product.updateOne({
+      $set: { [viewCountField]: newViewCount },
+    });
   }
 }
 

@@ -101,7 +101,7 @@ class UsersService {
 
   public async getUsersWithHighestTotalOrderValue(type: 'daily' | 'weekly' | 'monthly' | 'yearly', limit = 5) {
     const startDate = getStartOfTimeframe(getNow().valueOf(), type);
-    const ordersInTimeRange = await this.Order.find({ createdAt: { $gte: startDate } }).select('customerId totalPrice');
+    const ordersInTimeRange = await this.Order.find({ createdAt: { $gte: startDate }, status: 'Done' }).select('customerId totalPrice');
 
     const totalOrderValueByUser = ordersInTimeRange.reduce((result, order) => {
       const userId = order.customerId.toString();

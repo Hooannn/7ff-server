@@ -13,6 +13,7 @@ class ProductsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/:productId`, this.productsController.getProductById);
+    this.router.get(`${this.path}/reset/daily`, this.productsController.resetProductsDailyData);
     this.router.get(`/search${this.path}`, this.productsController.searchProducts);
     this.router.get(`${this.path}`, this.productsController.getAllProducts);
     this.router.post(`${this.path}`, adminMiddleware, this.productsController.addProduct);

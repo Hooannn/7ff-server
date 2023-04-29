@@ -3,6 +3,16 @@ import ProductsService from '@/services/products.service';
 import { NextFunction, Request, Response } from 'express';
 class ProductsController {
   private productsService = new ProductsService();
+
+  public resetProductsDailyData = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      this.productsService.resetProductsDailyData();
+      res.status(200).json({ code: 200, success: true });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getProductById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { productId } = req.params;
