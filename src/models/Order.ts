@@ -109,8 +109,8 @@ orderSchema.pre('findOneAndUpdate', async function (next) {
 orderSchema.pre('findOneAndDelete', async function (next) {
   const productsService = new ProductsService();
   const order = await this.model.findOne(this.getQuery());
-  const { items } = order;
-  productsService.revertProductSales(items, order.createdAt);
+  const { items, status } = order;
+  if (status === 'Done') productsService.revertProductSales(items, order.createdAt);
   next();
 });
 export default model('Order', orderSchema);

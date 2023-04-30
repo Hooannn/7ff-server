@@ -19,6 +19,8 @@ class ProductsService {
     const productsToReset = await this.Product.find({
       $or: [
         { 'dailyViewCount.count': { $gt: 0 } },
+        { 'dailyData.totalSales': { $gt: 0 } },
+        { 'dailyData.totalUnits': { $gt: 0 } },
         { 'weeklyViewCount.count': { $gt: 0 } },
         { 'monthlyViewCount.count': { $gt: 0 } },
         { 'yearlyViewCount.count': { $gt: 0 } },
@@ -30,6 +32,7 @@ class ProductsService {
         await this.resetViewCount(product, 'weekly'),
         await this.resetViewCount(product, 'monthly'),
         await this.resetViewCount(product, 'yearly'),
+        await this.updateDailySales({ product, itemQuantity: 0 }),
       ]);
     }
   }
