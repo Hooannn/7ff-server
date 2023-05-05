@@ -16,6 +16,7 @@ class AuthRoute implements Routes {
     this.router.post(`${this.path}/sign-up/email`, [emailValidator(), passwordValidator()], this.authController.signUpByEmail);
     this.router.post(`${this.path}/sign-in/email`, [emailValidator(), passwordValidator()], this.authController.signInByEmail);
     this.router.post(`${this.path}/refresh`, this.authController.getAccessToken);
+    this.router.post(`${this.path}/google-auth`, this.authController.googleAuthentication);
     this.router.post(`${this.path}/forgot-password`, emailValidator(), this.authController.forgotPassword);
     this.router.post(`${this.path}/reset-password`, passwordValidator(), this.authController.resetPassword);
     this.router.post(`${this.path}/deactivate`, authMiddleware, passwordValidator(), this.authController.deactivateAccount);

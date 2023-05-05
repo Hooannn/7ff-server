@@ -1,8 +1,9 @@
 import AuthService from '@/services/auth.service';
 import { NextFunction, Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { successStatus } from '@/config';
+import { errorStatus, successStatus } from '@/config';
 import { RequestWithUser } from '@/interfaces';
+import { HttpException } from '@/exceptions/HttpException';
 class AuthController {
   private authService = new AuthService();
   public signUpByEmail = async (req: Request, res: Response, next: NextFunction) => {
@@ -91,6 +92,19 @@ class AuthController {
         .clearCookie('access_token', { path: '/' })
         .status(200)
         .json({ code: 200, success: true, data, message: 'Success' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public googleAuthentication = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { googleAccessToken } = req.body;
+      if (!googleAccessToken) {
+        throw new HttpException(400, errorStatus.GOOGLE_AUTHENTICATION_FAILED);
+      }
+      const data = await this.authService.googleAuthentication(googleAccessToken.toString());
+      res.status(200).json({ code: 200, success: true, data, message: data.message || successStatus.GOOGLE_AUTHENTICATION_SUCCESSFULLY });
     } catch (error) {
       next(error);
     }

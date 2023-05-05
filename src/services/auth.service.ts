@@ -10,6 +10,8 @@ import {
   RESETPASSWORD_TOKEN_LIFE,
   RESETPASSWORD_TOKEN_SECRET,
   CLIENT_URL,
+  GG_CLIENT_ID,
+  successStatus,
 } from '@config';
 import { HttpException } from '@/exceptions/HttpException';
 import User from '@/models/User';
@@ -18,6 +20,8 @@ import { errorStatus } from '@config';
 import NodemailerService from './nodemailer.service';
 import Jti from '@/models/Jti';
 import OrdersService from './orders.service';
+import axios from 'axios';
+
 class AuthService {
   private jwt = jwt;
   private User = User;
@@ -96,8 +100,43 @@ class AuthService {
     return await this.User.findById(id).select('-password -refreshToken');
   }
 
+  public async googleAuthentication(googleAccessToken: string) {
+    const userData = await this.getGoogleUserData(googleAccessToken);
+    const { email_verified, family_name, given_name, email, picture } = userData;
+    if (!email_verified) throw new HttpException(400, errorStatus.EMAIL_VERIFICATION_FAILED);
+    const target = await this.User.findOne({ email });
+    if (target) {
+      const refreshToken = this.generateRefreshToken({ userId: target._id.toString() });
+      const accessToken = this.generateAccessToken({ userId: target._id.toString(), role: target.role.toString() as AuthJwtPayload['role'] });
+      const user = await this.User.findByIdAndUpdate(target._id.toString(), { refreshToken }, { returnOriginal: false }).select('-password');
+      return { user, refreshToken, accessToken, message: successStatus.GOOGLE_SIGN_IN_SUCCESSFULLY };
+    } else {
+      const password = email + GG_CLIENT_ID;
+      const hashedPassword = hashSync(password, parseInt(SALTED_PASSWORD));
+      const user = new this.User({ email, password: hashedPassword, role: 'User', firstName: given_name, lastName: family_name, avatar: picture });
+      await user.save();
+      const refreshToken = this.generateRefreshToken({ userId: user._id.toString() });
+      const accessToken = this.generateAccessToken({ userId: user._id.toString(), role: user.role.toString() as AuthJwtPayload['role'] });
+      const userWithTokens = await this.User.findByIdAndUpdate(user._id.toString(), { refreshToken }, { returnOriginal: false }).select('-password');
+      return { user: userWithTokens, refreshToken, accessToken, message: successStatus.GOOGLE_SIGN_UP_SUCCESSFULLY };
+    }
+  }
+
   public verifyAccessToken(token: string) {
     return this.jwt.verify(token, ACCESS_TOKEN_SECRET);
+  }
+
+  private async getGoogleUserData(googleAccessToken: string) {
+    try {
+      const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+          Authorization: `Bearer ${googleAccessToken}`,
+        },
+      });
+      return data;
+    } catch (error) {
+      throw new HttpException(400, errorStatus.INVALID_GOOGLE_ACCESS_TOKEN);
+    }
   }
 
   private generateAccessToken({ userId, role }: AuthJwtPayload) {
