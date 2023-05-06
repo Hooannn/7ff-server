@@ -53,7 +53,7 @@ class OrdersService {
   }
 
   public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {
-    const order = await this.Order.findById(orderId);
+    const order = await this.Order.findById(orderId).populate('items.product', 'name price isAvailable');
     if (order.customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
     return order;
   }
