@@ -34,6 +34,7 @@ export interface IProduct {
   category: Types.ObjectId;
   isAvailable: boolean;
   rating: number;
+  ratingCount?: number;
   dailyViewCount?: IViewCount;
   weeklyViewCount?: IViewCount;
   monthlyViewCount?: IViewCount;
@@ -111,6 +112,10 @@ const productSchema = new Schema<IProduct>(
     rating: {
       type: Number,
       default: 5,
+    },
+    ratingCount: {
+      type: Number,
+      default: 1,
     },
     dailyViewCount: {
       time: {

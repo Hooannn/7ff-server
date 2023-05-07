@@ -15,6 +15,7 @@ export interface IOrder {
   isDelivery: boolean;
   deliveryAddress?: string;
   deliveryPhone?: string;
+  rating?: number;
   status: 'Processing' | 'Delivering' | 'Done' | 'Cancelled';
 }
 
@@ -45,6 +46,7 @@ const orderSchema = new Schema<IOrder>(
     },
     deliveryAddress: String,
     deliveryPhone: String,
+    rating: Number,
     status: {
       type: String,
       enum: ['Processing', 'Delivering', 'Done', 'Cancelled'],

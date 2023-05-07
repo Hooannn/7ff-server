@@ -1,4 +1,5 @@
-import { CLIENT_URL, successStatus } from '@/config';
+import { CLIENT_URL, errorStatus, successStatus } from '@/config';
+import { HttpException } from '@/exceptions/HttpException';
 import { RequestWithUser } from '@/interfaces';
 import NodemailerService from '@/services/nodemailer.service';
 import OrdersService from '@/services/orders.service';
@@ -69,6 +70,19 @@ class OrdersController {
       const order = req.body;
       const updatedOrder = await this.ordersService.updateOrder(id.toString(), order);
       res.status(200).json({ code: 200, success: true, data: updatedOrder, message: successStatus.UPDATE_SUCCESSFULLY });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public ratingOrder = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const { orderId } = req.params;
+      const { value } = req.body;
+      const { userId } = req.auth;
+      if (!parseInt(value)) throw new HttpException(400, errorStatus.MISSING_RATING_VALUE);
+      const updatedOrder = await this.ordersService.ratingOrder(orderId.toString(), userId, parseInt(value));
+      res.status(200).json({ code: 200, success: true, data: updatedOrder, message: successStatus.RATING_SUCCESSFULLY });
     } catch (error) {
       next(error);
     }
