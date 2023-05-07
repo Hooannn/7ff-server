@@ -62,7 +62,7 @@ class ProductsService {
     const products = await this.Product.find({ _id: { $in: productIds } });
     for (let index = 0; index < products.length; index++) {
       const itemQuantity = items.find(item => item.product.toString() === products[index]._id.toString()).quantity;
-      if (itemQuantity <= products[index].stocks) {
+      if (itemQuantity <= products[index].stocks && products[index].isAvailable) {
         totalPrice += products[index].price * itemQuantity;
         await products[index].updateOne({ $inc: { stocks: -itemQuantity } });
         products[index].save();
