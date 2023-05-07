@@ -1,5 +1,4 @@
 import Reservation, { IReservation } from '@/models/Reservation';
-import mongoose from 'mongoose';
 class ReservationService {
   private Reservation = Reservation;
   public async bookReservation(reqReservation: Partial<IReservation>) {
@@ -28,6 +27,10 @@ class ReservationService {
     return await this.Reservation.find({
       'contacts.email': customerEmail,
     }).sort(sort ? { [sort]: 1 } : { createdAt: -1 });
+  }
+
+  public async getReservationById({ reservationId }: { reservationId: string }) {
+    return this.Reservation.findById(reservationId);
   }
 
   public async deleteReservation(reservationId: string) {

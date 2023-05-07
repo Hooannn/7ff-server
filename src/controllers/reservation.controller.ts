@@ -31,6 +31,18 @@ class ReservationController {
     }
   };
 
+  public getReservationById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { reservationId } = req.params;
+      const reservation = await this.reservationService.getReservationById({
+        reservationId: reservationId.toString(),
+      });
+      res.status(200).json({ code: 200, success: true, data: reservation });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getUserReservations = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, sort } = req.query;

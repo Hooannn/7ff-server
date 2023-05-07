@@ -16,6 +16,7 @@ class ReservationRoute implements Routes {
   private initializeRoutes() {
     this.router.post(`${this.path}`, this.reservationController.bookReservation);
     this.router.get(`${this.path}`, adminMiddleware, this.reservationController.getAllReservations);
+    this.router.get(`${this.path}/:reservationId`, authMiddleware, this.reservationController.getReservationById);
     this.router.get(`/my-reservations`, authMiddleware, this.reservationController.getUserReservations);
     this.router.patch(`${this.path}`, adminMiddleware, this.reservationController.updateReservation);
     this.router.delete(`${this.path}`, adminMiddleware, this.reservationController.deleteReservation);

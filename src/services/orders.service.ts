@@ -6,6 +6,7 @@ import { IUser } from '@/models/User';
 import { isSame, getNow, getPreviousTimeframe, getStartOfTimeframe, getEndOfTimeframe } from '@/utils/time';
 import mongoose, { Document, Types } from 'mongoose';
 import type { Dayjs } from 'dayjs';
+import Product from '@/models/Product';
 interface CreateChartParams {
   orders: (Document<unknown, any, IOrder> &
     Omit<
@@ -28,6 +29,7 @@ interface ChartData {
 }
 class OrdersService {
   private Order = Order;
+  private Product = Product;
 
   public async getOrdersByCustomerId({
     customerId,
@@ -78,6 +80,30 @@ class OrdersService {
 
   public async updateOrder(orderId: string, order: IOrder) {
     return await this.Order.findOneAndUpdate({ _id: orderId }, order, { returnOriginal: false });
+  }
+
+  public async ratingOrder(orderId: string, userId: string, value: number) {
+    const target = await this.Order.findById(orderId);
+    if (!target) throw new HttpException(404, errorStatus.ORDER_NOT_FOUND);
+    if (target.customerId.toString() !== userId) throw new HttpException(403, errorStatus.NO_PERMISSIONS);
+    if (target.status !== 'Done') throw new HttpException(400, 'YOU_CAN_ONLY_RATE_A_COMPLETE_ORDER');
+    if (target.rating) throw new HttpException(409, errorStatus.ORDER_ALREADY_BEEN_RATED);
+
+    const updateValue = value < 1 ? 1 : value > 5 ? 5 : value;
+    target.rating = updateValue;
+    await target.save();
+
+    target.items.forEach(async item => {
+      const product = await this.Product.findById(item.product);
+      if (product) {
+        if (!product.ratingCount) product.ratingCount = 1;
+        const newRating = (product.rating * product.ratingCount + updateValue) / (product.ratingCount + 1);
+        product.ratingCount += 1;
+        product.rating = newRating;
+        await product.save();
+      }
+    });
+    return target;
   }
 
   public async getSummaryOrders(to: number, type: 'daily' | 'weekly' | 'monthly' | 'yearly') {
