@@ -90,8 +90,7 @@ class OrdersService {
     if (target.rating) throw new HttpException(409, errorStatus.ORDER_ALREADY_BEEN_RATED);
 
     const updateValue = value < 1 ? 1 : value > 5 ? 5 : value;
-    target.rating = updateValue;
-    await target.save();
+    await this.Order.findByIdAndUpdate(orderId, {rating: updateValue})
 
     target.items.forEach(async item => {
       const product = await this.Product.findById(item.product);
