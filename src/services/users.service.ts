@@ -68,7 +68,7 @@ class UsersService {
 
   public async getCartItems(userId: string) {
     const { cartItems } = await this.User.findById(userId).select('cartItems').populate('cartItems.product');
-    return cartItems;
+    return cartItems.filter(item => item.product !== null);
   }
 
   public async addCartItem({ userId, product, quantity }: { userId: string; product: string; quantity: number }) {
