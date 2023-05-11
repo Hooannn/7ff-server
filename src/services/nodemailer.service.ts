@@ -24,32 +24,40 @@ class NodemailerService {
     });
   }
 
-  public async sendResetPasswordMail(email: string, href: string) {
+  public async sendResetPasswordMail(email: string, firstName: string, href: string, locale: string) {
     const mailOptions: SendMailOptions = {
       from: GMAIL_USER,
       to: email,
-      subject: 'Reset password - 7FF',
-      html: forgotPasswordTemplate(href),
+      subject: locale === 'vi' ? 'Đặt lại mật khẩu - 7FF' : 'Reset password - 7FF',
+      html: forgotPasswordTemplate(firstName, href, locale),
     };
     return await this.sendMail(mailOptions);
   }
 
-  public async sendOrderConfirmationEmail(email: string, order: IOrder, href: string) {
+  public async sendOrderConfirmationEmail(email: string, firstName: string, orderId: string, href: string, locale: string) {
     const mailOptions: SendMailOptions = {
       from: GMAIL_USER,
       to: email,
-      subject: 'Order confirmation - 7FF',
-      html: orderConfirmationTemplate(order, href),
+      subject: locale === 'vi' ? 'Xác nhận đơn hàng - 7FF' : 'Order confirmation - 7FF',
+      html: orderConfirmationTemplate(orderId, firstName, href, locale),
     };
     return await this.sendMail(mailOptions);
   }
 
-  public async sendBookingConfirmationEmail(email: string, underName: string, bookingTime: number | string) {
+  public async sendBookingConfirmationEmail(
+    email: string,
+    foundUser: boolean,
+    reservationId: string,
+    underName: string,
+    bookingTime: number | string,
+    href: string,
+    locale: string,
+  ) {
     const mailOptions: SendMailOptions = {
       from: GMAIL_USER,
       to: email,
-      subject: 'Booking confirmation - 7FF',
-      html: bookingConfirmationTemplate(underName, bookingTime),
+      subject: locale === 'vi' ? 'Xác nhận đơn đặt bàn - 7FF' : 'Booking confirmation - 7FF',
+      html: bookingConfirmationTemplate(foundUser, reservationId, underName, bookingTime, href, locale),
     };
     return await this.sendMail(mailOptions);
   }

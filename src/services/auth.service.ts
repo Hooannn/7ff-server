@@ -58,14 +58,14 @@ class AuthService {
     return { accessToken };
   }
 
-  public async forgotPassword(email: string) {
+  public async forgotPassword(email: string, locale: string) {
     const user = await this.User.findOne({ email });
     if (!user) throw new HttpException(400, errorStatus.UNREGISTERED);
     const blackJti = new this.Jti({ isUsed: false });
     await blackJti.save();
     const token = this.generateResetPasswordToken({ email, jti: blackJti._id.toString() });
     const resetPasswordUrl = `${CLIENT_URL}/auth?type=reset&token=${token}`;
-    await this.nodemailerService.sendResetPasswordMail(email, resetPasswordUrl);
+    await this.nodemailerService.sendResetPasswordMail(email, user?.firstName, resetPasswordUrl, locale);
     return { token };
   }
 

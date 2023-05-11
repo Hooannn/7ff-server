@@ -95,6 +95,7 @@ class OrdersController {
         return res.status(400).json({ errors: errors.array() });
       }
       const { userId } = req.auth;
+      const { locale } = req.query;
       const { isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
       const order = await this.ordersService.createOrder({
         customerId: userId as any,
@@ -105,10 +106,11 @@ class OrdersController {
         items,
         note,
       });
-      const { email: customerEmail, _id } = await this.usersService.getUserById(userId);
+      const { email: customerEmail, _id, firstName } = await this.usersService.getUserById(userId);
       await this.usersService.resetCartItems(_id.toString());
       const mailHref = `${CLIENT_URL}/profile/orders`;
-      if (customerEmail) this.nodemailerService.sendOrderConfirmationEmail(customerEmail, order, mailHref);
+      if (customerEmail)
+        this.nodemailerService.sendOrderConfirmationEmail(customerEmail, firstName, order._id.toString(), mailHref, locale.toString());
       res.status(201).json({ code: 201, success: true, data: order, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
