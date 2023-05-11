@@ -108,11 +108,11 @@ orderSchema.pre('findOneAndUpdate', async function (next) {
   next();
 });
 
-orderSchema.pre('findOneAndDelete', async function (next) {
-  const productsService = new ProductsService();
-  const order = await this.model.findOne(this.getQuery());
-  const { items, status } = order;
-  if (status === 'Done') productsService.revertProductSales(items, order.createdAt);
-  next();
-});
+// orderSchema.pre('findOneAndDelete', async function (next) {
+//   const productsService = new ProductsService();
+//   const order = await this.model.findOne(this.getQuery());
+//   const { items, status } = order;
+//   if (status === 'Done') productsService.revertProductSales(items, order.createdAt);
+//   next();
+// });
 export default model('Order', orderSchema);

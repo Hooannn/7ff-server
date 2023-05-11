@@ -51,7 +51,8 @@ class AuthController {
         return res.status(400).json({ errors: errors.array() });
       }
       const { email } = req.body;
-      const data = await this.authService.forgotPassword(email);
+      const { locale } = req.query;
+      const data = await this.authService.forgotPassword(email, locale?.toString());
       res.status(200).json({ code: 200, success: true, data, message: successStatus.FORGOT_PASSWORD_SUCCESSFULLY });
     } catch (error) {
       next(error);
