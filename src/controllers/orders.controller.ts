@@ -103,13 +103,25 @@ class OrdersController {
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
+      const { isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
       const checkoutHour = dayjs().hour();
       const checkoutMinute = dayjs().minute();
-      if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute >= CLOSE_MINUTE))
-        throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
+      const validateDeliveryCondition = () => {
+        if (checkoutHour < OPEN_HOUR || checkoutHour >= CLOSE_HOUR) throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
+      };
+      const validateCondition = () => {
+        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute >= CLOSE_MINUTE))
+          throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
+      };
+
+      if (isDelivery) {
+        validateDeliveryCondition();
+      } else {
+        validateCondition();
+      }
+
       const { userId } = req.auth;
       const { locale } = req.query;
-      const { isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
       const order = await this.ordersService.createOrder({
         customerId: userId as any,
         voucher,
