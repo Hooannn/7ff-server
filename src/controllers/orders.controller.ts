@@ -107,10 +107,11 @@ class OrdersController {
       const checkoutHour = dayjs().hour();
       const checkoutMinute = dayjs().minute();
       const validateDeliveryCondition = () => {
-        if (checkoutHour < OPEN_HOUR || checkoutHour >= CLOSE_HOUR) throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
+        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute > 0))
+          throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
       };
       const validateCondition = () => {
-        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute >= CLOSE_MINUTE))
+        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute > CLOSE_MINUTE))
           throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
       };
 
