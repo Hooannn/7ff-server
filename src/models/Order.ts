@@ -68,7 +68,7 @@ async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: 
     });
     if (!voucher) throw new HttpException(400, errorStatus.VOUCHER_NOT_FOUND);
     if (voucher.discountType === 'percent') {
-      priceAfterDiscount = totalPrice - totalPrice * voucher.discountAmount;
+      priceAfterDiscount = totalPrice - totalPrice * (voucher.discountAmount / 100);
     } else {
       priceAfterDiscount = totalPrice - voucher.discountAmount;
     }
