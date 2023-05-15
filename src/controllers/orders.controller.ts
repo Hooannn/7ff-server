@@ -6,10 +6,7 @@ import OrdersService from '@/services/orders.service';
 import UsersService from '@/services/users.service';
 import { NextFunction, Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import dayjs from 'dayjs';
-import tz from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-import { getNow, getTime } from '@/utils/time';
+import { getNow } from '@/utils/time';
 class OrdersController {
   private ordersService = new OrdersService();
   private usersService = new UsersService();
@@ -106,10 +103,11 @@ class OrdersController {
       const checkoutHour = now.hour();
       const checkoutMinute = now.minute();
       const validateDeliveryCondition = () => {
-        if (checkoutHour < OPEN_HOUR || checkoutHour >= CLOSE_HOUR) throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
+        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute > 0))
+          throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
       };
       const validateCondition = () => {
-        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute >= CLOSE_MINUTE))
+        if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute > CLOSE_MINUTE))
           throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
       };
 
