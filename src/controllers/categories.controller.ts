@@ -1,8 +1,11 @@
-import { successStatus } from '@/config';
+import { errorStatus, successStatus } from '@/config';
+import { HttpException } from '@/exceptions/HttpException';
 import CategoriesService from '@/services/categories.service';
+import ProductsService from '@/services/products.service';
 import { NextFunction, Request, Response } from 'express';
 class CategoriesController {
   private categoriesService = new CategoriesService();
+  private productsService = new ProductsService();
   public getAllCategories = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { skip, limit, filter, sort } = req.query;
@@ -31,6 +34,8 @@ class CategoriesController {
   public deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.query;
+      const product = await this.productsService.findOneProductByCategory(id.toString());
+      if (product) throw new HttpException(400, errorStatus.CATEGORY_ALREADY_ATTACHED);
       await this.categoriesService.deleteCategory(id.toString());
       res.status(200).json({ code: 200, success: true, message: successStatus.DELETE_SUCCESSFULLY });
     } catch (error) {

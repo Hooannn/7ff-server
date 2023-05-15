@@ -6,12 +6,7 @@ import OrdersService from '@/services/orders.service';
 import UsersService from '@/services/users.service';
 import { NextFunction, Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import dayjs from 'dayjs';
-import tz from 'dayjs/plugin/timezone';
-import utc from 'dayjs/plugin/utc';
-dayjs.extend(tz);
-dayjs.extend(utc);
-dayjs.tz.setDefault('Asia/Ho_Chi_Minh');
+import { getNow } from '@/utils/time';
 class OrdersController {
   private ordersService = new OrdersService();
   private usersService = new UsersService();
@@ -104,8 +99,9 @@ class OrdersController {
         return res.status(400).json({ errors: errors.array() });
       }
       const { isDelivery, deliveryAddress, deliveryPhone, items, note, voucher } = req.body;
-      const checkoutHour = dayjs().hour();
-      const checkoutMinute = dayjs().minute();
+      const now = getNow();
+      const checkoutHour = now.hour();
+      const checkoutMinute = now.minute();
       const validateDeliveryCondition = () => {
         if (checkoutHour < OPEN_HOUR || checkoutHour > CLOSE_HOUR || (checkoutHour === CLOSE_HOUR && checkoutMinute > 0))
           throw new HttpException(400, errorStatus.INVALID_CHECKOUT_TIME);
