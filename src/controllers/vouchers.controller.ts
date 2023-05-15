@@ -23,8 +23,13 @@ class VouchersController {
   public addVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { code, discountAmount, discountType, expiredDate, totalUsageLimit } = req.body;
-      if (discountAmount <= 0) throw new HttpException(400, errorStatus.INVALID_VOUCHER_AMOUNT);
-      const voucher = await this.vouchersService.addVoucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate, totalUsageLimit });
+      const voucher = await this.vouchersService.addVoucher({
+        code: code.trim().toUpperCase(),
+        discountAmount,
+        discountType,
+        expiredDate,
+        totalUsageLimit,
+      });
       res.status(201).json({ code: 201, success: true, data: voucher, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
@@ -44,8 +49,14 @@ class VouchersController {
   public updateVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.query;
-      const voucher = req.body;
-      const updatedVoucher = await this.vouchersService.updateVoucher(id.toString(), voucher);
+      const { code, discountAmount, discountType, expiredDate, totalUsageLimit } = req.body;
+      const updatedVoucher = await this.vouchersService.updateVoucher(id.toString(), {
+        code: code.trim().toUpperCase(),
+        discountAmount,
+        discountType,
+        expiredDate,
+        totalUsageLimit,
+      });
       res.status(200).json({ code: 200, success: true, data: updatedVoucher, message: successStatus.UPDATE_SUCCESSFULLY });
     } catch (error) {
       next(error);
