@@ -71,6 +71,10 @@ class ProductsService {
     return { totalPrice, failedProducts };
   }
 
+  public async findOneProductByCategory(categoryId: string) {
+    return await this.Product.findOne({ category: categoryId });
+  }
+
   public async updateProductSales(items: { product: string | Types.ObjectId; quantity: number }[], orderCreatedAt?: number | string | Date) {
     const productIds = items.map(item => new mongo.ObjectId(item.product));
     const products = await this.Product.find({ _id: { $in: productIds } });

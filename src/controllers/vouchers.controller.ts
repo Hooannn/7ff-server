@@ -1,4 +1,5 @@
-import { successStatus } from '@/config';
+import { errorStatus, successStatus } from '@/config';
+import { HttpException } from '@/exceptions/HttpException';
 import { RequestWithUser } from '@/interfaces';
 import VouchersService from '@/services/vouchers.service';
 import { NextFunction, Request, Response } from 'express';
@@ -22,6 +23,7 @@ class VouchersController {
   public addVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { code, discountAmount, discountType, expiredDate, totalUsageLimit } = req.body;
+      if (discountAmount <= 0) throw new HttpException(400, errorStatus.INVALID_VOUCHER_AMOUNT);
       const voucher = await this.vouchersService.addVoucher({ code: code.toUpperCase(), discountAmount, discountType, expiredDate, totalUsageLimit });
       res.status(201).json({ code: 201, success: true, data: voucher, message: successStatus.CREATE_SUCCESSFULLY });
     } catch (error) {

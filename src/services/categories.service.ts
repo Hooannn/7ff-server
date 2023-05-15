@@ -1,4 +1,6 @@
+import { HttpException } from '@/exceptions/HttpException';
 import Category, { ICategory } from '../models/Category';
+import { errorStatus } from '@/config';
 class CategoriesService {
   private Category = Category;
 
@@ -11,6 +13,11 @@ class CategoriesService {
   }
 
   public async addCategory(reqCategory: ICategory) {
+    const { name } = reqCategory;
+    const existedCategory = await this.Category.findOne({
+      $or: [{ 'name.vi': name.vi }, { 'name.en': name.en }],
+    });
+    if (existedCategory) throw new HttpException(400, errorStatus.CATEGORY_DUBLICATE_NAME);
     const category = new this.Category(reqCategory);
     await category.save();
     return category;
