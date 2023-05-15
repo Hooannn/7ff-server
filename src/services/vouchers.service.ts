@@ -31,8 +31,8 @@ class VouchersService {
   }
 
   public async updateVoucher(voucherId: string, voucher: Partial<IVoucher>) {
-    const duplicatedVouchers = await this.Voucher.countDocuments({ code: voucher.code });
-    if (duplicatedVouchers >= 2) throw new HttpException(409, errorStatus.VOUCHER_EXISTED);
+    const duplicatedVoucher = await this.Voucher.findOne({ code: voucher.code, _id: { $ne: voucherId } });
+    if (duplicatedVoucher) throw new HttpException(409, errorStatus.VOUCHER_EXISTED);
 
     if (voucher.discountAmount <= 0 || (voucher.discountType === 'percent' && voucher.discountAmount > 100)) {
       throw new HttpException(400, errorStatus.INVALID_VOUCHER_AMOUNT);

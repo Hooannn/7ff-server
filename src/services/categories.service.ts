@@ -29,10 +29,11 @@ class CategoriesService {
 
   public async updateCategory(categoryId: string, category: ICategory) {
     const { name } = category;
-    const existedCategory = await this.Category.countDocuments({
+    const duplicatedCategory = await this.Category.findOne({
       $or: [{ 'name.vi': { $regex: `^${name.vi.trim()}$`, $options: 'i' } }, { 'name.en': { $regex: `^${name.en.trim()}$`, $options: 'i' } }],
+      _id: { $ne: categoryId },
     });
-    if (existedCategory >= 2) throw new HttpException(409, errorStatus.CATEGORY_DUPLICATE_NAME);
+    if (duplicatedCategory) throw new HttpException(409, errorStatus.CATEGORY_DUPLICATE_NAME);
     return await this.Category.findOneAndUpdate({ _id: categoryId }, category, { returnOriginal: false });
   }
 }
