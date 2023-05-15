@@ -17,7 +17,7 @@ class CategoriesService {
     const existedCategory = await this.Category.findOne({
       $or: [{ 'name.vi': { $regex: `^${name.vi.trim()}$`, $options: 'i' } }, { 'name.en': { $regex: `^${name.en.trim()}$`, $options: 'i' } }],
     });
-    if (existedCategory) throw new HttpException(400, errorStatus.CATEGORY_DUPLICATE_NAME);
+    if (existedCategory) throw new HttpException(409, errorStatus.CATEGORY_DUPLICATE_NAME);
     const category = new this.Category(reqCategory);
     await category.save();
     return category;
@@ -29,10 +29,10 @@ class CategoriesService {
 
   public async updateCategory(categoryId: string, category: ICategory) {
     const { name } = category;
-    const existedCategory = await this.Category.findOne({
+    const existedCategory = await this.Category.countDocuments({
       $or: [{ 'name.vi': { $regex: `^${name.vi.trim()}$`, $options: 'i' } }, { 'name.en': { $regex: `^${name.en.trim()}$`, $options: 'i' } }],
     });
-    if (existedCategory) throw new HttpException(400, errorStatus.CATEGORY_DUPLICATE_NAME);
+    if (existedCategory >= 2) throw new HttpException(409, errorStatus.CATEGORY_DUPLICATE_NAME);
     return await this.Category.findOneAndUpdate({ _id: categoryId }, category, { returnOriginal: false });
   }
 }
