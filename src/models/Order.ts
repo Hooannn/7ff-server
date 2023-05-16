@@ -2,6 +2,7 @@ import { errorStatus } from '@/config';
 import ProductsService from '../services/products.service';
 import { Schema, model, Types } from 'mongoose';
 import { HttpException } from '@/exceptions/HttpException';
+import { getNow } from '@/utils/time';
 
 export interface IOrder {
   customerId: Types.ObjectId;
@@ -63,8 +64,8 @@ async function getPriceAfterDiscount(appliedVoucher: string | null, totalPrice: 
     const voucher = await VoucherModel.findOne({
       _id: appliedVoucher,
       totalUsageLimit: { $gt: 0 },
-      usersClaimed: { $nin: customerId },
-      expiredDate: { $gt: Date.now() },
+      usersClaimed: { $nin: [customerId] },
+      expiredDate: { $gte: getNow().valueOf() },
     });
     if (!voucher) throw new HttpException(400, errorStatus.VOUCHER_NOT_FOUND);
     if (voucher.discountType === 'percent') {
