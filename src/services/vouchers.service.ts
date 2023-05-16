@@ -1,6 +1,7 @@
 import { errorStatus } from '@/config';
 import Voucher, { IVoucher } from '@/models/Voucher';
 import { HttpException } from '@/exceptions/HttpException';
+import { getNow } from '@/utils/time';
 
 class VouchersService {
   private Voucher = Voucher;
@@ -46,7 +47,7 @@ class VouchersService {
       code: code.toUpperCase(),
       totalUsageLimit: { $gt: 0 },
       usersClaimed: { $nin: [userId] },
-      expiredDate: { $gte: Date.now() },
+      expiredDate: { $gte: getNow().valueOf() },
     });
     if (!voucher) throw new HttpException(400, errorStatus.VOUCHER_NOT_FOUND);
     return voucher;
