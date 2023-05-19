@@ -11,12 +11,9 @@ const deactiveUserSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
     },
     password: {
       type: String,
-      required: true,
     },
     phoneNumber: {
       type: String,
