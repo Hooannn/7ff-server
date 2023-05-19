@@ -21,6 +21,7 @@ import NodemailerService from './nodemailer.service';
 import Jti from '@/models/Jti';
 import OrdersService from './orders.service';
 import axios from 'axios';
+import ReservationService from './reservation.service';
 
 class AuthService {
   private jwt = jwt;
@@ -29,6 +30,7 @@ class AuthService {
   private Jti = Jti;
   private nodemailerService = new NodemailerService();
   private ordersService = new OrdersService();
+  private reservationsService = new ReservationService();
   public async signUpByEmail({ email, password, firstName, lastName }: { email: string; password: string; firstName: string; lastName: string }) {
     const isEmailExisted = await this.User.findOne({ email });
     if (isEmailExisted) throw new HttpException(409, errorStatus.EMAIL_EXISTED);
@@ -82,14 +84,19 @@ class AuthService {
   public async deactivateAccount({ userId, password }: { userId: string; password: string }) {
     const target = await this.User.findById(userId);
     if (!target) throw new HttpException(400, errorStatus.USER_NOT_FOUND);
-    const isPasswordMatched = compareSync(password, target.password.toString());
+    const isPasswordMatched = compareSync(password, target.password?.toString());
     if (!isPasswordMatched) throw new HttpException(400, errorStatus.WRONG_PASSWORD);
-    // const orders = await this.ordersService.getOrdersByCustomerId(userId);
-    const orders = await this.ordersService.getOrdersByCustomerId({ customerId: userId });
+    const [orders, reservations] = await Promise.all([
+      await this.ordersService.getOrdersByCustomerId({ customerId: userId, userId }),
+      await this.reservationsService.getUserReservations({ customerEmail: target.email, sort: null }),
+    ]);
     orders.forEach(async order => {
       if (order.status !== 'Done') {
         await order.update({ status: 'Cancelled' });
       }
+    });
+    reservations.forEach(async order => {
+      await order.update({ status: 'Done' });
     });
     const deactiveUser = new this.DeactiveUser(({ ...target } as any)._doc);
     await deactiveUser.save();
