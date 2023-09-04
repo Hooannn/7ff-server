@@ -123,7 +123,13 @@ class ProductsService {
         },
       ],
       isAvailable: true,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'category',
+        select: 'name',
+      });
+
     return { products };
   }
 
