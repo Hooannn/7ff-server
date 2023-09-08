@@ -51,11 +51,13 @@ class OrdersService {
         { $sort: { __order: 1 } },
       ]);
     }
-    return await this.Order.find({ customerId }).sort(sort ? { [sort]: 1 } : { createdAt: -1 });
+    return await this.Order.find({ customerId })
+      .sort(sort ? { [sort]: 1 } : { createdAt: -1 })
+      .populate('items.product', 'name price isAvailable featuredImages rating ratingCount');
   }
 
   public async getOrderById({ orderId, userId, role }: { orderId: string; userId?: string; role?: IUser['role'] }) {
-    const order = await this.Order.findById(orderId).populate('items.product', 'name price isAvailable');
+    const order = await this.Order.findById(orderId).populate('items.product', 'name price isAvailable featuredImages rating ratingCount');
     if (order.customerId.toString() !== userId.toString() && role === 'User') throw new HttpException(403, errorStatus.NO_PERMISSIONS);
     return order;
   }
